@@ -5,7 +5,7 @@
   // Al crear el Codespace se instalan las dependencias, y cada vez que se abre
   // se levanta el servidor solo: desde el móvil no hay que escribir nada.
   "postCreateCommand": "npm install",
-  "postAttachCommand": "npm start",
+  "postAttachCommand": "bash .devcontainer/arrancar.sh",
 
   "forwardPorts": [3000],
   "portsAttributes": {

@@ -54,11 +54,20 @@ arranca solo:
 
 1. Abre el repositorio en el móvil → botón verde **Code** → pestaña **Codespaces** →
    **Create codespace**.
-2. Espera a que cargue el editor. Instala dependencias y ejecuta `npm start` sin que
-   tengas que escribir nada.
-3. Abre la pestaña **Ports** (o *Puertos*). En el puerto **3000**, cambia la visibilidad
-   a **Public**: mantén pulsada la fila → *Port Visibility* → *Public*.
-4. Copia la dirección `https://…-3000.app.github.dev` y repártela. Esa es la sala.
+2. Espera a que cargue el editor. Se instalan las dependencias, se intenta poner el
+   puerto en público y arranca el servidor. En la terminal aparece un recuadro con la
+   **dirección para repartir** y si el puerto quedó público o no.
+3. Si el recuadro dice `PRIVADA`, hay que cambiarlo a mano. Lo más rápido en el móvil es
+   abrir otra terminal y ejecutar:
+
+   ```bash
+   gh codespace ports visibility 3000:public --codespace $CODESPACE_NAME
+   ```
+
+   Por interfaz: menú ☰ (arriba a la izquierda) → **View** → **Command Palette** → escribe
+   `ports` → **Ports: Focus on Ports View**. Aparece abajo, junto a TERMINAL. Mantén
+   pulsada la fila del puerto 3000 → *Port Visibility* → *Public*.
+4. Reparte la dirección `https://…-3000.app.github.dev`. Esa es la sala.
 
 Deja la pestaña del Codespace abierta mientras jugáis: si se cierra, el Codespace se
 para solo a los 30 minutos. El plan gratuito de GitHub incluye unas decenas de horas
