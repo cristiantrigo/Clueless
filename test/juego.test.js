@@ -58,6 +58,37 @@ test('lo parecido queda cerca y lo ajeno lejos', () => {
   }
 });
 
+test('parecerse en las letras no acerca si no hay relación de significado', () => {
+  // «roto» no debe acercarse a «rojo» por escribirse igual de parecido: era el
+  // fallo que hacía que la gente persiguiera pistas falsas.
+  const casos = [
+    ['rojo', 'roto'], ['rojo', 'robo'], ['gato', 'rato'],
+    ['mar', 'mal'], ['pino', 'pito'], ['casa', 'caza'],
+  ];
+  for (const [secreta, impostora] of casos) {
+    const p = rankingDe(secreta).posiciones.get(impostora);
+    if (p === undefined) continue; // no está en el léxico
+    assert.ok(p > 400, `${impostora} sale demasiado cerca de ${secreta}: #${p}`);
+  }
+});
+
+test('lo emparentado de verdad sí queda cerca', () => {
+  const casos = [
+    ['rojo', 'rosa'], ['rojo', 'azul'],
+    ['pan', 'panadero'], ['pan', 'panaderia'], ['pan', 'harina'],
+    ['flor', 'floristeria'], ['libro', 'libreria'],
+  ];
+  for (const [secreta, pariente] of casos) {
+    const p = rankingDe(secreta).posiciones.get(pariente);
+    assert.ok(p !== undefined, `${pariente} no está en el léxico`);
+    assert.ok(p <= 60, `${pariente} debería estar cerca de ${secreta}, y está en #${p}`);
+  }
+});
+
+test('el léxico no deja de crecer', () => {
+  assert.ok(TOTAL_PALABRAS >= 2100, `sólo ${TOTAL_PALABRAS} palabras`);
+});
+
 test('el calor baja al alejarse la posición', () => {
   assert.equal(calor(1), 100);
   assert.ok(calor(10) > calor(100));

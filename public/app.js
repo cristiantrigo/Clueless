@@ -74,16 +74,51 @@
     });
   });
 
-  function unirse(codigo, nombre, token = null) {
+  let reintentos = 0;
+
+  /**
+   * @param {boolean} volviendo  true cuando es una reconexión automática: ahí
+   *   se insiste unas cuantas veces antes de rendirse, porque el servidor puede
+   *   estar reiniciándose y devolver «no existe la sala» durante unos segundos.
+   */
+  function unirse(codigo, nombre, token = null, volviendo = false) {
     socket.emit('unirse', { codigo, nombre, token }, (r) => {
-      if (!r.ok) {
-        aviso(r.error, 'caliente');
-        guardado.borrar();
-        mostrarPantalla('p-inicio');
+      if (r.ok) {
+        reintentos = 0;
+        iniciarSesion(r, r.vista?.yo?.esHost ?? false);
         return;
       }
-      iniciarSesion(r, r.vista?.yo?.esHost ?? false);
+
+      const salaPerdida = /no existe/i.test(r.error || '');
+      if (volviendo && salaPerdida && reintentos < 4) {
+        reintentos += 1;
+        aviso(`Recuperando la sala… (${reintentos}/4)`, 'caliente');
+        setTimeout(() => unirse(codigo, nombre, token, true), 1200 * reintentos);
+        return;
+      }
+
+      reintentos = 0;
+      guardado.borrar();
+      mostrarPantalla('p-inicio');
+      if (volviendo && salaPerdida) {
+        $('#in-codigo').value = codigo;
+        avisoFijo('La sala se ha perdido porque el servidor se reinició. Vuelve a entrar con el código.');
+      } else {
+        aviso(r.error, 'caliente');
+      }
     });
+  }
+
+  /** Mensaje en la pantalla de inicio, que no se desvanece como los avisos. */
+  function avisoFijo(texto) {
+    let el = document.getElementById('ui-nota-inicio');
+    if (!el) {
+      el = document.createElement('p');
+      el.id = 'ui-nota-inicio';
+      el.className = 'nota-inicio';
+      $('#form-unirse').prepend(el);
+    }
+    el.textContent = texto;
   }
 
   function iniciarSesion(respuesta, esHost) {
@@ -478,12 +513,12 @@
 
   socket.on('connect', () => {
     // Reconexión tras una caída: volvemos a la sala en la que ya estábamos.
-    if (estado.codigo && estado.token) return unirse(estado.codigo, null, estado.token);
+    if (estado.codigo && estado.token) return unirse(estado.codigo, null, estado.token, true);
     // Primera conexión: recuperamos la sesión guardada, si la hay.
     if (sesionAuto) {
       const s = sesionAuto;
       sesionAuto = null;
-      unirse(s.codigo, s.nombre, s.token);
+      unirse(s.codigo, s.nombre, s.token, true);
     }
   });
 

@@ -93,11 +93,14 @@ proceso Node persistente con WebSockets:
 - **Render**: *New → Blueprint*, apunta al repositorio y detecta `render.yaml`. Plan gratis.
 - **Railway / Fly.io / un VPS**: sólo necesitan `npm start` y la variable `PORT`.
 
-> **Vercel no vale tal cual.** Aunque ya admite WebSockets, sus funciones son efímeras y
-> escalan a varias instancias, mientras que las salas de este juego viven en la memoria de
-> un proceso: dos jugadores podrían caer en instancias distintas y no verse. Para
-> desplegarlo ahí habría que mover el estado de las salas a Redis (Upstash) y añadir el
-> adaptador correspondiente de Socket.IO.
+> **Vercel funciona a medias, y no se recomienda.** Admite WebSockets y el repositorio
+> trae `vercel.json` y `api/index.js` para desplegarlo ahí, pero sus funciones tienen un
+> tope de duración (`maxDuration`, 300 s como máximo en el plan gratuito) y la conexión
+> vive dentro de la invocación: **cada pocos minutos se corta a todo el mundo en mitad de
+> la partida**, y si además se recicla la instancia, las salas —que viven en su memoria—
+> desaparecen. Para que fuese estable habría que mover el estado a Redis (Upstash) con el
+> adaptador de Socket.IO. Con un proceso persistente (Render, Railway, Fly.io) no pasa
+> nada de esto.
 
 ## Pensado para el móvil
 
@@ -140,14 +143,20 @@ Las **pistas** salen en este orden: número de letras → campo semántico → l
 
 No hay dependencias de IA ni servicios externos: el motor es propio y determinista.
 
-- `server/lexicon.js` — **1816 palabras** en español agrupadas en ~230 campos
+- `server/lexicon.js` — **2168 palabras** en español agrupadas en ~300 campos
   semánticos. Cada grupo aporta etiquetas (`animal`, `felino`, `postre`, `abstracto`…)
   y una palabra hereda las etiquetas de todos los grupos en los que aparece.
 - `server/similarity.js` — construye un vector disperso por palabra, **pondera cada
   etiqueta con IDF** (las raras pesan mucho más que las genéricas) y mide la cercanía
-  con coseno, más un pequeño componente ortográfico que capta parentescos de forma
-  (`pan`/`panadero`). Con la palabra secreta se ordena todo el léxico y esa posición es
-  lo que ve el jugador.
+  con coseno. Con la palabra secreta se ordena todo el léxico y esa posición es lo que
+  ve el jugador.
+
+**El parecido de las letras no acerca por sí solo.** Si dos palabras no comparten nada
+de significado, escribirse parecido no suma: con la secreta `rojo`, `roto` cae al
+puesto #1918 y `rosa` se queda en el #16, que es lo razonable. El parecido de forma
+sólo actúa como empujón entre palabras que ya están emparentadas, para juntar familias
+de una misma raíz. Las relaciones de verdad —`pan` con `panadero` y `panadería`— se
+declaran en el léxico, no se deducen de la ortografía.
 
 Ejemplo real, palabra secreta `urraca`:
 `jilguero · pajaro · paloma · canario · mirlo · cigueña · gorrion · cuervo`.
@@ -180,8 +189,9 @@ public/
   app.js          cliente
   styles.css      estilos, móvil primero
 test/
-  juego.test.js   26 pruebas del motor y de la lógica de sala
+  juego.test.js   29 pruebas del motor y de la lógica de sala
   e2e.mjs         partida completa por sockets con anfitrión + 20 jugadores
+  sesion.mjs      recarga, reconexión y salida, en un navegador de verdad
 ```
 
 ## Pruebas

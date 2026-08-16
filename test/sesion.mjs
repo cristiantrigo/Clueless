@@ -1,7 +1,14 @@
 /* Comprobación en navegador de la sesión: recarga, reconexión y salida.
  * Requiere playwright:  npx playwright install chromium
  */
-import { chromium } from 'playwright';
+let chromium;
+try {
+  ({ chromium } = await import('playwright'));
+} catch {
+  console.log('Prueba de navegador omitida: falta playwright.\n' +
+    '  npm i -D playwright && npx playwright install chromium');
+  process.exit(0);
+}
 import { spawn } from 'node:child_process';
 const P=Number(process.env.P||4410), URL=`http://localhost:${P}`;
 const srv=spawn('node',['server/index.js'],{env:{...process.env,PORT:String(P)},stdio:'ignore'});

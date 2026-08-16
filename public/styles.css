@@ -149,6 +149,16 @@ select { appearance: none; background-image: linear-gradient(180deg, rgba(255,25
   text-align: center;
 }
 
+.nota-inicio {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 77, 141, .18);
+  border: 1px solid var(--acento-2);
+  color: var(--texto);
+  font-size: .88rem;
+}
+
 .reglas {
   margin: 34px auto 0;
   max-width: 640px;

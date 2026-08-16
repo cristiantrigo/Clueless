@@ -272,6 +272,111 @@ export const GROUPS = [
   ['comunicacion medio noticia', 'periodico noticia revista radio television reportaje entrevista titular prensa'],
   ['comunicacion expresion gesto', 'sonrisa gesto mirada abrazo beso saludo despedida guiño señal'],
 
+  // ─── Oficio, tienda y producto ─────────────────────────────────────────────
+  // Relaciones reales que antes sólo se sostenían por parecerse las letras.
+  ['comida panaderia pan oficio tienda', 'pan panaderia panadero bollo harina masa horno tostada'],
+  ['comida carniceria carne oficio tienda', 'carne carniceria carnicero filete chuleta embutido'],
+  ['comida pescaderia pescado oficio tienda', 'pescado pescaderia pescadero marisco gamba merluza'],
+  ['comida fruteria fruta oficio tienda', 'fruta fruteria frutero verdura mercado'],
+  ['planta floristeria flor oficio tienda', 'flor floristeria florista ramo maceta jardinero'],
+  ['arte libreria libro oficio tienda', 'libro libreria librero editorial lectura'],
+  ['humano salud farmacia oficio tienda', 'medicina farmacia farmaceutico receta pastilla'],
+  ['comida pasteleria postre oficio tienda', 'pastel pasteleria pastelero tarta reposteria'],
+  ['humano peluqueria pelo oficio tienda', 'pelo peluqueria peluquero corte tijeras peine'],
+  ['humano zapateria zapato oficio tienda', 'zapato zapateria zapatero bota cuero'],
+  ['humano relojeria reloj oficio', 'reloj relojeria relojero hora pila'],
+  ['humano joyeria joya oficio tienda', 'joya joyeria joyero anillo oro plata'],
+
+  // ─── Calendario ────────────────────────────────────────────────────────────
+  ['tiempo calendario semana dia', 'lunes martes miercoles jueves viernes sabado domingo'],
+  ['tiempo calendario mes año', 'enero febrero marzo abril mayo junio julio agosto septiembre octubre noviembre diciembre'],
+  ['tiempo calendario periodo', 'finde puente festivo vacaciones jornada temporada trimestre'],
+
+  // ─── Números y orden ───────────────────────────────────────────────────────
+  ['abstracto cantidad numero', 'cuatro cinco seis siete ocho nueve once doce quince veinte treinta cuarenta cincuenta'],
+  ['abstracto orden posicion serie', 'primero segundo tercero cuarto quinto ultimo penultimo siguiente anterior'],
+  ['abstracto cantidad medida imprecisa', 'mucho poco bastante demasiado suficiente escaso abundante monton'],
+
+  // ─── Más comida ────────────────────────────────────────────────────────────
+  ['comida fruta tropical', 'papaya guayaba maracuya coco aguacate lima pomelo granada datil'],
+  ['comida frutoseco aperitivo picar', 'almendra nuez avellana pistacho cacahuete pipa castaña'],
+  ['comida legumbre proteina puchero', 'lenteja garbanzo alubia soja haba judia'],
+  ['comida desayuno merienda dulce', 'cereal croissant magdalena donut bizcocho tostada napolitana'],
+  ['comida pescado mar plato', 'gamba langostino rape rodaballo dorada lubina boqueron pulpo'],
+  ['comida internacional plato', 'taco burrito nacho sushi ramen curry falafel kebab lasaña'],
+  ['comida salsa acompañamiento sabor', 'salsa mayonesa ketchup mostaza alioli guacamole vinagreta'],
+  ['comida bebida fria gaseosa', 'refresco cola gaseosa tonica soda granizado horchata hielo'],
+  ['comida conserva despensa', 'lata bote conserva atun aceituna encurtido tarro'],
+
+  // ─── Casa ──────────────────────────────────────────────────────────────────
+  ['casa cocina aparato utensilio', 'batidora licuadora rallador exprimidor abrelatas sacacorchos espatula cucharon'],
+  ['casa dormitorio descanso objeto', 'colchon somier edredon despertador mesilla pijama'],
+  ['casa baño objeto', 'bañera lavabo inodoro grifo azulejo toallero secador'],
+  ['casa jardin exterior objeto', 'maceta regadera manguera cortacesped hamaca valla porche'],
+  ['casa edificio parte exterior', 'fachada portal ascensor rellano trastero patio'],
+  ['casa herramienta arreglo', 'cinta pegamento silicona brocha rodillo nivel metro'],
+
+  // ─── Ropa ──────────────────────────────────────────────────────────────────
+  ['ropa deporte comodo', 'chandal mallas leggins deportiva muñequera visera'],
+  ['ropa formal elegante evento', 'traje pajarita esmoquin blusa tacon americana'],
+  ['ropa parte prenda coser', 'manga cuello bolsillo puño dobladillo forro etiqueta'],
+
+  // ─── Cuerpo y salud ────────────────────────────────────────────────────────
+  ['humano cuerpo gesto cara', 'sonrisa mueca guiño lagrima bostezo estornudo hipo suspiro'],
+  ['humano salud especialista medico', 'dentista pediatra cirujano psicologo veterinario oculista fisioterapeuta matrona'],
+  ['humano sensacion fisica cuerpo', 'cosquillas picor escalofrio calambre mareo hormigueo'],
+
+  // ─── Carácter y emociones ──────────────────────────────────────────────────
+  ['abstracto caracter personalidad', 'timido simpatico antipatico gracioso serio alegre tranquilo nervioso terco'],
+  ['abstracto emocion reaccion mente', 'asombro admiracion curiosidad interes aburrimiento indiferencia alivio'],
+
+  // ─── Escuela y estudio ─────────────────────────────────────────────────────
+  ['escuela material objeto', 'estuche compas calculadora diccionario libreta agenda subrayador'],
+  ['escuela accion aprender', 'estudiar aprobar suspender repasar memorizar copiar corregir'],
+
+  // ─── Tecnología ────────────────────────────────────────────────────────────
+  ['tecnologia internet app moderno', 'wifi aplicacion descarga enlace usuario perfil publicacion comentario seguidor'],
+  ['tecnologia aparato accesorio', 'cargador cable memoria disco funda soporte mando'],
+
+  // ─── Transporte y ciudad ───────────────────────────────────────────────────
+  ['transporte conducir objeto', 'gasolina gasolinera aparcamiento multa carnet peaje atasco'],
+  ['lugar ciudad servicio', 'correos gimnasio lavanderia cajero comisaria guarderia'],
+
+  // ─── Naturaleza ────────────────────────────────────────────────────────────
+  ['naturaleza planta cuidado jardin', 'abono riego poda invernadero semillero'],
+  ['servivo animal ave marina costa', 'gaviota pelicano cormoran albatros'],
+  ['servivo animal insecto util campo', 'lombriz abejorro polinizacion'],
+
+  // ─── Deporte ───────────────────────────────────────────────────────────────
+  ['deporte invierno nieve frio', 'esqui snowboard patinaje trineo'],
+  ['deporte agua mar', 'surf vela remo buceo piraguismo'],
+  ['deporte motor velocidad', 'rally motociclismo kart circuito piloto'],
+
+  // ─── Arte y ocio ───────────────────────────────────────────────────────────
+  ['arte musica genero estilo', 'rock pop jazz reggaeton salsa clasica tecno'],
+  ['arte television ocio casa', 'serie capitulo temporada canal documental concurso telenovela'],
+  ['cultura fiesta noche salir', 'copa discoteca madrugada resaca quedada'],
+
+  // ─── Viajes ────────────────────────────────────────────────────────────────
+  ['viaje turismo vacaciones', 'pasaporte excursion souvenir guia mapa reserva albergue camping'],
+
+  // ─── Dinero ────────────────────────────────────────────────────────────────
+  ['abstracto dinero pago cobro', 'tarjeta efectivo propina cambio recibo nomina cuenta'],
+
+  // ─── Acciones cotidianas ───────────────────────────────────────────────────
+  ['accion casa limpieza cotidiana', 'limpiar barrer fregar lavar planchar ordenar tender colgar'],
+  ['accion trabajo esfuerzo', 'trabajar practicar ensayar intentar conseguir lograr fracasar rendirse'],
+  ['accion social relacion', 'saludar despedir invitar visitar ayudar acompañar presentar quedar'],
+  ['accion cocina preparar', 'cocinar freir hervir asar hornear cortar picar mezclar probar'],
+
+  // ─── Cualidades ────────────────────────────────────────────────────────────
+  ['cualidad valoracion juicio', 'bueno malo mejor peor genial horrible normal raro corriente'],
+  ['cualidad forma aspecto', 'redondo plano hueco macizo puntiagudo curvo recto torcido'],
+  ['cualidad sabor olor sensacion', 'rico asqueroso apetecible empalagoso perfumado apestoso'],
+
+  // ─── Seguridad ─────────────────────────────────────────────────────────────
+  ['sociedad seguridad proteccion', 'alarma vigilante seguro rescate emergencia socorro'],
+
   // ─── Acciones y movimiento ─────────────────────────────────────────────────
   ['accion movimiento desplazar', 'andar correr saltar subir bajar entrar salir volver huir perseguir'],
   ['accion movimiento cuerpo', 'girar empujar tirar levantar caer sentarse tumbarse agacharse estirar'],
