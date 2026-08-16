@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#150b2e">
+  <title>Clueless Party — adivina la palabra secreta</title>
+  <meta name="description" content="Juego multijugador en español: adivina la palabra secreta por cercanía semántica. Salas con código para hasta 50 amigos.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔎</text></svg>">
+</head>
+<body>
+
+<!-- ══ Pantalla: inicio ══════════════════════════════════════════════════ -->
+<section class="pantalla activa" id="p-inicio">
+  <div class="marca">
+    <h1>Clue<span>less</span></h1>
+    <p class="lema">Adivina la palabra secreta. Gana quien llegue primero.</p>
+  </div>
+
+  <div class="tarjetas-inicio">
+    <form class="tarjeta unirse" id="form-unirse">
+      <h2>Entrar a una sala</h2>
+      <input id="in-codigo" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Código de sala" autocomplete="off" required>
+      <input id="in-nombre" maxlength="16" placeholder="Tu nombre" autocomplete="nickname" required>
+      <button class="btn grande" type="submit">Entrar</button>
+    </form>
+
+    <div class="tarjeta crear">
+      <h2>¿Organizas tú?</h2>
+      <p>Crea una sala, comparte el código y proyecta el marcador en la tele.</p>
+      <button class="btn grande secundario" id="btn-crear">Crear sala nueva</button>
+    </div>
+  </div>
+
+  <details class="reglas">
+    <summary>Cómo se juega</summary>
+    <ol>
+      <li>Hay una <b>palabra secreta</b> en español. Escribe la que quieras.</li>
+      <li>El juego te dice en qué <b>posición</b> queda tu palabra según lo cerca que esté de la secreta por significado: la <b>#1</b> es la palabra.</li>
+      <li><b>#847</b> es frío, <b>#42</b> es caliente, <b>#3</b> es que casi la tienes.</li>
+      <li>Todos ven el <b>ranking en vivo</b>: quién se está acercando más.</li>
+      <li>Gana quien la acierte antes. Quien no la saque puntúa según lo cerca que se quedó.</li>
+    </ol>
+  </details>
+
+  <p class="pie">Léxico de <span id="pie-palabras">…</span> palabras en español.</p>
+</section>
+
+<!-- ══ Pantalla: sala ════════════════════════════════════════════════════ -->
+<section class="pantalla" id="p-sala">
+  <header class="barra">
+    <div class="barra-izq">
+      <span class="etiqueta-codigo">SALA</span>
+      <strong class="codigo" id="ui-codigo">------</strong>
+      <button class="btn mini fantasma host-only" id="btn-copiar" title="Copiar enlace de invitación">Copiar enlace</button>
+    </div>
+    <div class="barra-cen">
+      <span id="ui-ronda" class="ronda-pill">Sala de espera</span>
+    </div>
+    <div class="barra-der">
+      <div class="crono" id="ui-crono" hidden><span id="ui-crono-num">0:00</span></div>
+      <span class="yo" id="ui-yo"></span>
+    </div>
+  </header>
+
+  <!-- ── Lobby ── -->
+  <div class="vista" id="v-lobby">
+    <div class="lobby-grid">
+      <div class="panel destacado">
+        <p class="mini-titulo">Únete en</p>
+        <p class="url-union" id="ui-url">—</p>
+        <p class="mini-titulo">con el código</p>
+        <p class="codigo-gigante" id="ui-codigo-grande">------</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-cab">
+          <h3>Jugadores <span class="contador" id="ui-contador">0</span></h3>
+        </div>
+        <ul class="jugadores" id="ui-jugadores"></ul>
+        <p class="vacio" id="ui-sin-jugadores">Esperando a que entre gente…</p>
+      </div>
+
+      <div class="panel ajustes host-only">
+        <h3>Ajustes de la partida</h3>
+        <label>Rondas <output id="out-rondas">5</output>
+          <input type="range" id="cfg-rondas" min="1" max="20" value="5"></label>
+        <label>Minutos por ronda <output id="out-minutos">4</output>
+          <input type="range" id="cfg-minutos" min="1" max="15" value="4"></label>
+        <label>Jugadores máximo <output id="out-max">20</output>
+          <input type="range" id="cfg-max" min="2" max="50" value="20"></label>
+        <label class="campo-select">Dificultad
+          <select id="cfg-dificultad">
+            <option value="facil">Fácil — cosas concretas</option>
+            <option value="mezcla" selected>Mezcla</option>
+            <option value="normal">Normal</option>
+            <option value="dificil">Difícil — abstractas</option>
+          </select>
+        </label>
+        <label class="campo-check"><input type="checkbox" id="cfg-pistas" checked> Pistas automáticas durante la ronda</label>
+        <label class="campo-check"><input type="checkbox" id="cfg-seguir" checked> La ronda sigue tras el primer acierto (para el podio)</label>
+      </div>
+    </div>
+
+    <div class="acciones host-only">
+      <button class="btn grande" id="btn-empezar">Empezar la partida</button>
+    </div>
+    <p class="espera jugador-only">Cuando el anfitrión empiece, aparecerá aquí la primera ronda. 🍿</p>
+  </div>
+
+  <!-- ── Ronda ── -->
+  <div class="vista" id="v-ronda">
+    <div class="ronda-grid">
+      <div class="columna-juego jugador-only">
+        <form id="form-intento" autocomplete="off">
+          <input id="in-palabra" placeholder="Escribe una palabra…" maxlength="24" autocapitalize="off" autocomplete="off" spellcheck="false">
+          <button class="btn" type="submit">Probar</button>
+        </form>
+        <p class="mensaje" id="ui-mensaje"></p>
+
+        <div class="ultimo" id="ui-ultimo" hidden>
+          <span class="ultimo-palabra"></span>
+          <span class="ultimo-pos"></span>
+          <div class="barra-calor"><i></i></div>
+        </div>
+
+        <ul class="intentos" id="ui-intentos"></ul>
+        <p class="vacio" id="ui-sin-intentos">Tus intentos aparecerán aquí, ordenados por cercanía.</p>
+      </div>
+
+      <div class="columna-tablero">
+        <div class="panel tablero">
+          <div class="panel-cab">
+            <h3>Quién va más cerca</h3>
+            <span class="leyenda">posición sobre <span id="ui-total">—</span></span>
+          </div>
+          <ol class="ranking" id="ui-ranking"></ol>
+        </div>
+
+        <div class="panel pistas" id="ui-panel-pistas" hidden>
+          <h3>Pistas</h3>
+          <ul id="ui-pistas"></ul>
+        </div>
+
+        <div class="panel host-only controles-host">
+          <p class="secreta-host">Palabra secreta: <b id="ui-secreta-host">—</b></p>
+          <div class="fila-botones">
+            <button class="btn mini" id="btn-pista">Dar pista</button>
+            <button class="btn mini fantasma" id="btn-terminar">Terminar ronda</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Resultados de ronda ── -->
+  <div class="vista" id="v-resultados">
+    <div class="revelacion">
+      <p class="mini-titulo">La palabra era</p>
+      <h2 class="palabra-secreta" id="ui-revelada">—</h2>
+      <p class="vecinas">Cerca estaban: <span id="ui-vecinas"></span></p>
+    </div>
+
+    <div class="panel podio-panel">
+      <h3>Podio de la ronda</h3>
+      <ol class="podio" id="ui-podio"></ol>
+      <p class="vacio" id="ui-nadie" hidden>Nadie la ha sacado esta vez. 😬</p>
+      <div class="cerca-final" id="ui-cerca"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Clasificación general</h3>
+      <ol class="clasificacion" id="ui-clasificacion"></ol>
+    </div>
+
+    <div class="acciones host-only">
+      <button class="btn grande" id="btn-siguiente">Siguiente ronda</button>
+    </div>
+    <p class="espera jugador-only">Esperando al anfitrión para la siguiente ronda…</p>
+  </div>
+
+  <!-- ── Final ── -->
+  <div class="vista" id="v-final">
+    <h2 class="titulo-final">🏆 Clasificación final</h2>
+    <ol class="clasificacion grande" id="ui-final"></ol>
+    <div class="acciones host-only">
+      <button class="btn grande" id="btn-reiniciar">Jugar otra partida</button>
+    </div>
+  </div>
+</section>
+
+<div class="avisos" id="ui-avisos"></div>
+<div class="confeti" id="ui-confeti" aria-hidden="true"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
