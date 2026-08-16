@@ -19,6 +19,12 @@ import { TOTAL_PALABRAS } from './similarity.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Identificador del proceso que atiende la petición. Las salas viven en su
+// memoria, así que si /api/salud devuelve identificadores distintos es que hay
+// varias instancias y los jugadores no se verían entre ellos.
+const INSTANCIA = Math.random().toString(36).slice(2, 10);
+const ARRANCADA = Date.now();
+
 export function crearAplicacion() {
   const app = express();
   const servidor = http.createServer(app);
@@ -27,7 +33,14 @@ export function crearAplicacion() {
 
   app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));
   app.get('/api/salud', (_req, res) => {
-    res.json({ ok: true, salas: gestor.salas.size, palabras: TOTAL_PALABRAS, limites: LIMITES });
+    res.json({
+      ok: true,
+      instancia: INSTANCIA,
+      vivaDesdeSegundos: Math.round((Date.now() - ARRANCADA) / 1000),
+      salas: gestor.salas.size,
+      palabras: TOTAL_PALABRAS,
+      limites: LIMITES,
+    });
   });
 
   // ─── Utilidades de emisión ───────────────────────────────────────────────────
