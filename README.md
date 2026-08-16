@@ -45,7 +45,26 @@ npm start
 Los demás abren `http://TU-IP-LOCAL:3000` desde el móvil. Para saber tu IP:
 `ipconfig getifaddr en0` (macOS) o `hostname -I` (Linux).
 
-### Con amigos que no están contigo, sin desplegar nada
+### Sólo con móviles, sin cuentas nuevas ni ordenador
+
+Si nadie tiene portátil a mano y todos estáis con datos móviles, se puede levantar el
+servidor desde el navegador del móvil con **GitHub Codespaces**, usando la cuenta de
+GitHub que ya tienes. El repositorio trae `.devcontainer/devcontainer.json`, así que
+arranca solo:
+
+1. Abre el repositorio en el móvil → botón verde **Code** → pestaña **Codespaces** →
+   **Create codespace**.
+2. Espera a que cargue el editor. Instala dependencias y ejecuta `npm start` sin que
+   tengas que escribir nada.
+3. Abre la pestaña **Ports** (o *Puertos*). En el puerto **3000**, cambia la visibilidad
+   a **Public**: mantén pulsada la fila → *Port Visibility* → *Public*.
+4. Copia la dirección `https://…-3000.app.github.dev` y repártela. Esa es la sala.
+
+Deja la pestaña del Codespace abierta mientras jugáis: si se cierra, el Codespace se
+para solo a los 30 minutos. El plan gratuito de GitHub incluye unas decenas de horas
+al mes, de sobra para una partida.
+
+### Con amigos que no están contigo, desde un ordenador
 
 Levanta el servidor y ábrelo al mundo con un túnel temporal:
 
