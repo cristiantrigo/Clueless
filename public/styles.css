@@ -200,6 +200,9 @@ select { appearance: none; background-image: linear-gradient(180deg, rgba(255,25
 .crono.urgente { background: var(--ardiendo); animation: latido .8s infinite; }
 @keyframes latido { 50% { transform: scale(1.07); } }
 .yo { font-size: .9rem; color: var(--tenue); display: flex; align-items: baseline; gap: 6px; }
+/* En plena ronda estorba y nadie quiere pulsarlo sin querer. */
+body[data-estado="ronda"] #btn-salir { display: none; }
+#btn-salir { padding: 6px 12px; font-size: .82rem; }
 .yo b { color: var(--texto); }
 .yo b::after { content: ' ·'; color: var(--tenue); font-weight: 400; }
 

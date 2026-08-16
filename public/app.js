@@ -381,6 +381,13 @@
     }
   }
 
+  $('#btn-salir').addEventListener('click', () => {
+    if (!confirm('¿Salir de la sala? Podrás volver con el código.')) return;
+    guardado.borrar();
+    // Recarga limpia: deja el socket, la URL y todas las pantallas a cero.
+    location.href = location.pathname;
+  });
+
   $('#btn-copiar').addEventListener('click', invitar);
   $('#btn-invitar').addEventListener('click', invitar);
 
@@ -545,10 +552,10 @@
   }
   if (sesionGuardada.nombre) $('#in-nombre').value = sesionGuardada.nombre;
 
-  // Sólo se vuelve sola a la sala guardada si el enlace no apunta a otra distinta.
+  // La dirección manda. Con «?sala=» se vuelve a entrar sola —es lo que salva a
+  // quien recarga o se queda sin cobertura en plena partida—, y con la URL
+  // limpia se empieza de cero, que es lo que uno espera al escribirla a mano.
   let sesionAuto =
-    sesionGuardada.codigo && sesionGuardada.token && (!salaUrl || salaUrl === sesionGuardada.codigo)
-      ? sesionGuardada
-      : null;
+    salaUrl && salaUrl === sesionGuardada.codigo && sesionGuardada.token ? sesionGuardada : null;
   // La reconexión la dispara el evento `connect` del socket.
 })();
