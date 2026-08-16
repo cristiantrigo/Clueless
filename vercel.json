@@ -8,7 +8,21 @@
     }
   },
   "rewrites": [
-    { "source": "/socket.io/:ruta*", "destination": "/api/index" },
-    { "source": "/api/salud", "destination": "/api/index" }
+    {
+      "source": "/socket.io",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/socket.io/",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/socket.io/:ruta*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/salud",
+      "destination": "/api/index"
+    }
   ]
 }

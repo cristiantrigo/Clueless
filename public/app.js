@@ -3,7 +3,7 @@
   'use strict';
 
   const $ = (sel) => document.querySelector(sel);
-  const socket = io();
+  const socket = io({ transports: ['websocket', 'polling'] });
 
   const estado = {
     codigo: null,
