@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "fluid": true,
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 300,
+      "includeFiles": "public/**"
+    }
+  },
+  "rewrites": [
+    { "source": "/socket.io/:ruta*", "destination": "/api/index" },
+    { "source": "/api/salud", "destination": "/api/index" }
+  ]
+}
