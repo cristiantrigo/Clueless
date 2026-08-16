@@ -110,13 +110,22 @@
     $('#ui-total').textContent = vista.totalPalabras.toLocaleString('es-ES');
     $('#ui-url').textContent = `${location.host}${location.pathname}`.replace(/\/$/, '');
     $('#ui-yo').innerHTML = vista.yo
-      ? `<b>${escapar(vista.yo.nombre)}</b>${vista.yo.esHost ? ' · anfitrión' : ` · ${vista.yo.puntos} pts`}`
+      ? `<b>${escapar(vista.yo.nombre)}</b>` +
+        (vista.yo.esHost ? '<span class="pts">anfitrión</span>' : `<span class="pts">${vista.yo.puntos} pts</span>`)
       : '';
 
-    $('#ui-ronda').textContent =
-      vista.estado === 'lobby' ? 'Sala de espera'
-      : vista.estado === 'final' ? 'Partida terminada'
-      : `Ronda ${vista.numeroRonda} de ${vista.config.rondas}`;
+    document.body.dataset.estado = vista.estado;
+    const pill = $('#ui-ronda');
+    if (vista.estado === 'lobby') {
+      pill.textContent = 'Sala de espera';
+      pill.dataset.corto = 'Sala';
+    } else if (vista.estado === 'final') {
+      pill.textContent = 'Partida terminada';
+      pill.dataset.corto = 'Final';
+    } else {
+      pill.textContent = `Ronda ${vista.numeroRonda} de ${vista.config.rondas}`;
+      pill.dataset.corto = `R${vista.numeroRonda}/${vista.config.rondas}`;
+    }
 
     pintarJugadores(vista);
     pintarAjustes(vista);
@@ -134,6 +143,9 @@
       pintarPistas(vista.ronda.pistas);
       if (estado.esHost) $('#ui-secreta-host').textContent = vista.ronda.secreta ?? '—';
       bloquearIntentos(Boolean(vista.misIntentos.find((i) => i.posicion === 1)));
+      $('#ui-n-intentos').textContent = vista.misIntentos.length;
+      const mio = vista.ranking.find((f) => f.id === vista.yo?.id);
+      $('#ui-mi-puesto').textContent = mio && mio.mejor !== null ? `${mio.puesto}º` : '—';
     } else {
       pararCrono();
     }
@@ -298,6 +310,7 @@
       campo.value = '';
       mensaje('');
       pintarUltimo(r.intento);
+      vibrar(r.acierto ? [40, 60, 120] : r.intento.posicion <= 50 ? 35 : 12);
       if (r.acierto) {
         bloquearIntentos(true);
         lanzarConfeti();
@@ -306,6 +319,17 @@
     });
     campo.focus();
   });
+
+  for (const boton of document.querySelectorAll('.pestana')) {
+    boton.addEventListener('click', () => irA(boton.dataset.ir));
+  }
+
+  function irA(panel) {
+    $('#v-ronda').dataset.panel = panel;
+    for (const b of document.querySelectorAll('.pestana')) {
+      b.classList.toggle('activa', b.dataset.ir === panel);
+    }
+  }
 
   $('#btn-empezar').addEventListener('click', () => {
     socket.emit('empezar_ronda', {}, (r) => { if (!r.ok) aviso(r.error, 'caliente'); });
@@ -323,15 +347,28 @@
     socket.emit('reiniciar', {}, (r) => { if (!r.ok) aviso(r.error, 'caliente'); });
   });
 
-  $('#btn-copiar').addEventListener('click', async () => {
+  async function invitar() {
     const url = `${location.origin}${location.pathname}?sala=${estado.codigo}`;
+    const texto = `Entra a mi sala de Clueless con el código ${estado.codigo}`;
+    // En el móvil se abre la hoja de compartir del sistema (WhatsApp, Telegram…).
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Clueless Party', text: texto, url });
+        return;
+      } catch (err) {
+        if (err?.name === 'AbortError') return; // el usuario cerró la hoja
+      }
+    }
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(`${texto}: ${url}`);
       aviso('Enlace copiado ✂️', 'entra');
     } catch {
       prompt('Copia este enlace:', url);
     }
-  });
+  }
+
+  $('#btn-copiar').addEventListener('click', invitar);
+  $('#btn-invitar').addEventListener('click', invitar);
 
   // Ajustes del anfitrión: se envían al soltar el control.
   const controles = ['#cfg-rondas', '#cfg-minutos', '#cfg-max', '#cfg-dificultad', '#cfg-pistas', '#cfg-seguir'];
@@ -368,6 +405,7 @@
     bloquearIntentos(false);
     $('#in-palabra').value = '';
     mensaje('');
+    irA('intentos');
     aviso(`Ronda ${numero} de ${total}. ¡Ya!`, 'entra');
     if (!estado.esHost) setTimeout(() => $('#in-palabra').focus(), 100);
   });
@@ -436,6 +474,10 @@
     campo.disabled = bloqueado;
     campo.placeholder = bloqueado ? '¡Ya la tienes! Mira el ranking…' : 'Escribe una palabra…';
     $('#form-intento button').disabled = bloqueado;
+  }
+
+  function vibrar(patron) {
+    try { navigator.vibrate?.(patron); } catch { /* no todos lo permiten */ }
   }
 
   function escapar(texto) {

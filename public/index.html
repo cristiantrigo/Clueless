@@ -6,6 +6,11 @@
   <meta name="theme-color" content="#150b2e">
   <title>Clueless Party — adivina la palabra secreta</title>
   <meta name="description" content="Juego multijugador en español: adivina la palabra secreta por cercanía semántica. Salas con código para hasta 50 amigos.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Clueless">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔎</text></svg>">
 </head>
@@ -56,7 +61,7 @@
       <button class="btn mini fantasma host-only" id="btn-copiar" title="Copiar enlace de invitación">Copiar enlace</button>
     </div>
     <div class="barra-cen">
-      <span id="ui-ronda" class="ronda-pill">Sala de espera</span>
+      <span id="ui-ronda" class="ronda-pill" data-corto="Sala">Sala de espera</span>
     </div>
     <div class="barra-der">
       <div class="crono" id="ui-crono" hidden><span id="ui-crono-num">0:00</span></div>
@@ -72,6 +77,7 @@
         <p class="url-union" id="ui-url">—</p>
         <p class="mini-titulo">con el código</p>
         <p class="codigo-gigante" id="ui-codigo-grande">------</p>
+        <button class="btn secundario" id="btn-invitar" type="button">Invitar amigos</button>
       </div>
 
       <div class="panel">
@@ -110,15 +116,30 @@
   </div>
 
   <!-- ── Ronda ── -->
-  <div class="vista" id="v-ronda">
-    <div class="ronda-grid">
-      <div class="columna-juego jugador-only">
-        <form id="form-intento" autocomplete="off">
-          <input id="in-palabra" placeholder="Escribe una palabra…" maxlength="24" autocapitalize="off" autocomplete="off" spellcheck="false">
-          <button class="btn" type="submit">Probar</button>
-        </form>
-        <p class="mensaje" id="ui-mensaje"></p>
+  <div class="vista" id="v-ronda" data-panel="intentos">
+    <!-- Consola fija: en el móvil se escribe sin tener que volver arriba. -->
+    <div class="consola jugador-only">
+      <form id="form-intento" autocomplete="off">
+        <input id="in-palabra" placeholder="Escribe una palabra…" maxlength="24"
+               autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
+               enterkeyhint="send">
+        <button class="btn" type="submit">Probar</button>
+      </form>
+      <p class="mensaje" id="ui-mensaje"></p>
+    </div>
 
+    <!-- En móvil se alterna entre los propios intentos y el marcador. -->
+    <nav class="pestanas jugador-only" id="ui-pestanas">
+      <button type="button" class="pestana activa" data-ir="intentos">
+        Tus intentos <span class="pill" id="ui-n-intentos">0</span>
+      </button>
+      <button type="button" class="pestana" data-ir="ranking">
+        Ranking <span class="pill" id="ui-mi-puesto">—</span>
+      </button>
+    </nav>
+
+    <div class="ronda-grid">
+      <div class="columna-juego jugador-only" data-panel="intentos">
         <div class="ultimo" id="ui-ultimo" hidden>
           <span class="ultimo-palabra"></span>
           <span class="ultimo-pos"></span>
@@ -129,7 +150,7 @@
         <p class="vacio" id="ui-sin-intentos">Tus intentos aparecerán aquí, ordenados por cercanía.</p>
       </div>
 
-      <div class="columna-tablero">
+      <div class="columna-tablero" data-panel="ranking">
         <div class="panel tablero">
           <div class="panel-cab">
             <h3>Quién va más cerca</h3>

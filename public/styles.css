@@ -28,13 +28,24 @@ html, body {
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   color: var(--texto);
+  background: var(--fondo-2);
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+/* El degradado va en una capa fija propia. Con `background-attachment: fixed`
+   en el body, los móviles dejan de pintarlo más allá del alto de la ventana y
+   el resto de la página sale en blanco. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
   background:
     radial-gradient(1200px 700px at 15% -10%, #4c2a8f 0%, transparent 60%),
     radial-gradient(900px 600px at 90% 0%, #a8215c 0%, transparent 55%),
     linear-gradient(180deg, var(--fondo) 0%, var(--fondo-2) 100%);
-  background-attachment: fixed;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  -webkit-text-size-adjust: 100%;
 }
 
 h1, h2, h3 { margin: 0; line-height: 1.15; }
@@ -159,8 +170,8 @@ select { appearance: none; background-image: linear-gradient(180deg, rgba(255,25
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 12px 18px;
-  background: rgba(10, 4, 26, .78);
+  padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
+  background: rgba(10, 4, 26, .82);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--panel-borde);
 }
@@ -185,8 +196,9 @@ select { appearance: none; background-image: linear-gradient(180deg, rgba(255,25
 }
 .crono.urgente { background: var(--ardiendo); animation: latido .8s infinite; }
 @keyframes latido { 50% { transform: scale(1.07); } }
-.yo { font-size: .9rem; color: var(--tenue); }
+.yo { font-size: .9rem; color: var(--tenue); display: flex; align-items: baseline; gap: 6px; }
 .yo b { color: var(--texto); }
+.yo b::after { content: ' ·'; color: var(--tenue); font-weight: 400; }
 
 /* ═══ Paneles ═══════════════════════════════════════════════════════════ */
 .panel {
@@ -435,6 +447,133 @@ body.es-host .panel h3 { font-size: 1.25rem; }
 }
 @keyframes caer {
   to { transform: translateY(105vh) rotate(720deg); opacity: .2; }
+}
+
+/* ═══ Consola de intento y pestañas ═════════════════════════════════════ */
+.consola { max-width: 620px; margin-bottom: 14px; }
+.pestanas { display: none; gap: 8px; margin-bottom: 14px; }
+.pestana {
+  font: inherit;
+  font-weight: 700;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px 12px;
+  color: var(--tenue);
+  background: rgba(255, 255, 255, .06);
+  border: 1.5px solid var(--panel-borde);
+  border-radius: 14px;
+  cursor: pointer;
+}
+.pestana.activa { color: #2b1055; background: var(--acento); border-color: var(--acento); }
+.pestana .pill {
+  min-width: 26px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: .8rem;
+  background: rgba(0, 0, 0, .28);
+  color: var(--texto);
+}
+.pestana.activa .pill { background: rgba(0, 0, 0, .22); color: #fff; }
+
+/* ═══ Móvil ═════════════════════════════════════════════════════════════ */
+@media (max-width: 860px) {
+  :root { --barra-alto: 52px; }
+
+  .barra {
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+    min-height: var(--barra-alto);
+    /* Casi opaca: si no, lo que pasa por detrás al hacer scroll se ve
+       emborronado a través de la barra. */
+    background: rgba(10, 4, 26, .96);
+  }
+  .barra-izq, .barra-der { gap: 8px; min-width: 0; }
+  .etiqueta-codigo { display: none; }
+  .codigo { font-size: 1.05rem; letter-spacing: .08em; }
+  .crono { font-size: 1.1rem; padding: 3px 10px; }
+  .yo {
+    font-size: .8rem;
+    max-width: 24vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* La etiqueta de ronda se abrevia para que la barra quepa en una línea. */
+  .ronda-pill { padding: 5px 12px; font-size: 0; }
+  .ronda-pill::after { content: attr(data-corto); font-size: .85rem; }
+  /* En plena ronda el código estorba: ya está en la pantalla de espera. */
+  body[data-estado="ronda"] .barra-izq { display: none; }
+
+  #v-lobby, #v-ronda, #v-resultados, #v-final { padding: 14px 12px 40px; }
+  /* Sin hueco entre la barra y la consola: al hacer scroll se colaba
+     contenido por la rendija. */
+  #v-ronda { padding-top: 0; }
+
+  /* Escribir siempre a mano, sin volver arriba. */
+  .consola {
+    position: sticky;
+    top: calc(var(--barra-alto) + env(safe-area-inset-top));
+    z-index: 15;
+    max-width: none;
+    margin: 0 -12px 12px;
+    padding: 12px;
+    background: #12062c;
+    border-bottom: 1px solid var(--panel-borde);
+  }
+  .mensaje { margin: 8px 2px 0; min-height: 0; }
+  .mensaje:empty { display: none; }
+
+  body:not(.es-host) .pestanas { display: flex; }
+  body:not(.es-host) #v-ronda[data-panel="intentos"] .columna-tablero,
+  body:not(.es-host) #v-ronda[data-panel="ranking"] .columna-juego { display: none; }
+
+  .panel { padding: 14px; }
+  .lobby-grid { gap: 12px; }
+  .codigo-gigante { font-size: clamp(2.4rem, 14vw, 3.4rem); }
+  .url-union { font-size: .95rem; margin-bottom: 12px; }
+  .btn.grande { padding: 15px 24px; }
+  /* En la barra no cabe: para invitar está el botón grande del panel. */
+  #btn-copiar { display: none; }
+
+  /* El botón principal queda anclado abajo, siempre a un pulgar de distancia. */
+  .acciones {
+    position: sticky;
+    bottom: 0;
+    z-index: 12;
+    margin: 18px -12px 0;
+    padding: 14px 12px calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, transparent, #14072f 45%);
+  }
+
+  /* Botón de expulsar con área táctil de verdad. */
+  .expulsar { padding: 4px 2px 4px 6px; font-size: 1.25rem; }
+
+  .ranking li { grid-template-columns: 26px 1fr auto; padding: 9px 10px; gap: 8px; }
+  .ranking .dato b { font-size: .95rem; }
+  .intentos li { padding: 13px 14px; }
+  .ultimo-palabra { font-size: 1.15rem; }
+
+  .palabra-secreta { font-size: clamp(2rem, 13vw, 3rem); }
+  .clasificacion.grande li { padding: 14px; font-size: 1rem; }
+
+  /* Avisos pegados abajo, pero por encima de la barra de acción anclada
+     cuando la hay, para no tapar nunca el botón principal. */
+  .avisos { bottom: calc(10px + env(safe-area-inset-bottom)); width: min(94vw, 420px); }
+  body[data-estado="lobby"] .avisos,
+  body[data-estado="resultados"] .avisos,
+  body[data-estado="final"] .avisos { bottom: calc(94px + env(safe-area-inset-bottom)); }
+  .aviso { padding: 9px 16px; font-size: .85rem; }
+}
+
+@media (max-width: 380px) {
+  /* Ya sabes cómo te llamas: en pantallas estrechas sólo se conservan los puntos. */
+  .yo b { display: none; }
+  .btn { padding: 12px 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

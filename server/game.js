@@ -154,6 +154,14 @@ export class Sala {
     };
     this.jugadores.set(nuevoToken, jugador);
     if (esHost && !this.hostToken) this.hostToken = nuevoToken;
+
+    // Quien llega con la ronda empezada juega ya, con el tiempo que quede: en
+    // una partida entre amigos la gente se incorpora tarde constantemente.
+    if (!esHost && this.estado === 'ronda' && this.ronda && !this.ronda.cerrada) {
+      this.ronda.progreso.set(nuevoToken, { mejor: null, intentos: 0, acertadoEn: null });
+      this.ronda.intentos.set(nuevoToken, []);
+    }
+
     this.ultimaActividad = Date.now();
     return { ok: true, jugador, nuevo: true };
   }

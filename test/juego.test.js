@@ -184,6 +184,21 @@ test('el orden de llegada reparte puntos decrecientes', () => {
   assert.equal(jugadores[1].victorias, 0);
 });
 
+test('quien entra a mitad de ronda puede jugar esa misma ronda', () => {
+  const { sala } = salaCon(1);
+  sala.empezarRonda();
+  const tarde = sala.entrar({ nombre: 'Tardon' });
+  assert.equal(tarde.ok, true);
+
+  const intento = sala.intentar(tarde.jugador.token, rankingDe(sala.ronda.secreta).orden[4]);
+  assert.equal(intento.ok, true, intento.error);
+  assert.equal(sala.rankingVivo().length, 2);
+
+  const acierto = sala.intentar(tarde.jugador.token, sala.ronda.secreta);
+  assert.equal(acierto.acierto, true);
+  assert.equal(tarde.jugador.puntos, 1000);
+});
+
 test('las palabras desconocidas no consumen intento', () => {
   const { sala, jugadores } = salaCon(1);
   sala.empezarRonda();

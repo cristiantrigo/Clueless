@@ -28,12 +28,31 @@ npm start           # http://localhost:3000
   del anfitrión es un marcador grande pensado para una tele). No juega: ve la palabra
   secreta y controla rondas y pistas.
 - **Jugadores**: entran en la misma dirección, meten el código de 6 cifras y su nombre.
-  También sirve el enlace directo `.../?sala=123456` que copia el botón *Copiar enlace*.
+  El botón *Invitar amigos* abre la hoja de compartir del móvil (WhatsApp, Telegram…)
+  con el enlace directo `.../?sala=123456`; en escritorio copia el enlace al portapapeles.
 
 Para jugar entre varios dispositivos de la misma red basta con que los demás abran la
 IP local del anfitrión (`http://192.168.x.x:3000`). Para jugar por internet, despliega
 en cualquier servicio que soporte Node y WebSockets (Render, Railway, Fly.io, un VPS…):
 sólo necesita `npm start` y la variable `PORT`.
+
+## Pensado para el móvil
+
+Los jugadores juegan desde el teléfono, así que la interfaz se diseñó primero para esa
+pantalla y luego se amplió al escritorio:
+
+- **Barra compacta de una sola línea** durante la ronda: ronda, cronómetro y tus puntos.
+- **Campo de intento fijo**: se queda pegado bajo la cabecera, así que se puede escribir
+  sin volver arriba aunque estés repasando el marcador.
+- **Dos pestañas** con contador en vivo, *Tus intentos (6)* y *Ranking (2º)*, en lugar de
+  una página kilométrica: se ve tu puesto sin desplazarte. En pantallas anchas
+  desaparecen y las dos columnas se muestran a la vez.
+- **Botón principal anclado abajo** (empezar partida, siguiente ronda), al alcance del pulgar.
+- **Vibración** al enviar un intento, más fuerte cuanto más caliente, y un patrón al acertar.
+- **Compartir nativo** para invitar, y `manifest.webmanifest` para añadirlo a la pantalla
+  de inicio y jugar a pantalla completa.
+- Respeta los márgenes seguros (notch, barra inferior) y funciona con el teclado abierto,
+  cuando la ventana se queda en 340 px de alto.
 
 ## Ajustes de la sala
 
@@ -96,7 +115,7 @@ public/
   app.js          cliente
   styles.css      estilos, móvil primero
 test/
-  juego.test.js   22 pruebas del motor y de la lógica de sala
+  juego.test.js   23 pruebas del motor y de la lógica de sala
   e2e.mjs         partida completa por sockets con anfitrión + 20 jugadores
 ```
 
@@ -111,6 +130,8 @@ npm run test:e2e  # partida real de 20 jugadores contra el servidor
 
 - **Reconexión**: cada jugador guarda un token en `localStorage`; si se le cae el móvil
   o cierra la pestaña, vuelve a su sitio con sus puntos e intentos intactos.
+- **Incorporación tardía**: quien entra con la ronda ya empezada juega esa misma ronda con
+  el tiempo que quede, en vez de esperar sentado a la siguiente.
 - **La palabra secreta nunca viaja** al cliente de un jugador durante la ronda; sólo la
   recibe el anfitrión y todos al cerrarse la ronda.
 - Las salas abandonadas se limpian solas a los 10 minutos (y cualquier sala a las 3 horas
