@@ -3,7 +3,10 @@
   'use strict';
 
   const $ = (sel) => document.querySelector(sel);
-  const socket = io({ transports: ['websocket', 'polling'] });
+  // Se intenta WebSocket primero y se cae al sondeo largo si no hay manera.
+  // `tryAllTransports` es imprescindible: sin él, socket.io 4.8+ se rinde en
+  // cuanto falla el primer transporte en vez de probar el siguiente.
+  const socket = io({ transports: ['websocket', 'polling'], tryAllTransports: true });
 
   const estado = {
     codigo: null,
