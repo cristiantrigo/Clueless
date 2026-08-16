@@ -34,10 +34,42 @@ npm start           # http://localhost:3000
   El botón *Invitar amigos* abre la hoja de compartir del móvil (WhatsApp, Telegram…)
   con el enlace directo `.../?sala=123456`; en escritorio copia el enlace al portapapeles.
 
-Para jugar entre varios dispositivos de la misma red basta con que los demás abran la
-IP local del anfitrión (`http://192.168.x.x:3000`). Para jugar por internet, despliega
-en cualquier servicio que soporte Node y WebSockets (Render, Railway, Fly.io, un VPS…):
-sólo necesita `npm start` y la variable `PORT`.
+## Jugar ya
+
+### En la misma red (cero despliegue)
+
+```bash
+npm start
+```
+
+Los demás abren `http://TU-IP-LOCAL:3000` desde el móvil. Para saber tu IP:
+`ipconfig getifaddr en0` (macOS) o `hostname -I` (Linux).
+
+### Con amigos que no están contigo, sin desplegar nada
+
+Levanta el servidor y ábrelo al mundo con un túnel temporal:
+
+```bash
+npm start
+npx cloudflared tunnel --url http://localhost:3000   # en otra terminal
+```
+
+Cloudflare devuelve una URL `https://algo.trycloudflare.com` que puedes repartir. No
+necesita cuenta y admite WebSockets. Deja de funcionar cuando cierres la terminal.
+
+### Alojado de verdad
+
+El repositorio trae `render.yaml` y `Procfile`. Vale cualquier servicio que ejecute un
+proceso Node persistente con WebSockets:
+
+- **Render**: *New → Blueprint*, apunta al repositorio y detecta `render.yaml`. Plan gratis.
+- **Railway / Fly.io / un VPS**: sólo necesitan `npm start` y la variable `PORT`.
+
+> **Vercel no vale tal cual.** Aunque ya admite WebSockets, sus funciones son efímeras y
+> escalan a varias instancias, mientras que las salas de este juego viven en la memoria de
+> un proceso: dos jugadores podrían caer en instancias distintas y no verse. Para
+> desplegarlo ahí habría que mover el estado de las salas a Redis (Upstash) y añadir el
+> adaptador correspondiente de Socket.IO.
 
 ## Pensado para el móvil
 
