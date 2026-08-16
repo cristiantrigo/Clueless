@@ -102,11 +102,43 @@ test('rechaza nombres repetidos, cortos y sala llena', () => {
   assert.equal(sala.entrar({ nombre: 'Marta' }).ok, false, 'debería estar llena');
 });
 
-test('admite 20 jugadores y les da colores', () => {
+test('admite 20 invitados más el anfitrión, y les da colores', () => {
   const { sala, jugadores } = salaCon(20, { maxJugadores: 20 });
   assert.equal(jugadores.length, 20);
   assert.equal(sala.activos.filter((j) => !j.esHost).length, 20);
+  // El anfitrión juega por defecto y no le quita la plaza a nadie.
+  assert.equal(sala.participantes.length, 21);
+  assert.equal(sala.entrar({ nombre: 'Sobra' }).ok, false);
   assert.ok(jugadores.every((j) => /^#[0-9a-f]{6}$/.test(j.color)));
+});
+
+test('el anfitrión juega por defecto y aparece en ranking y clasificación', () => {
+  const { sala, host, jugadores } = salaCon(1);
+  assert.equal(sala.juega(host), true);
+  sala.empezarRonda();
+
+  const suyo = sala.intentar(host.token, rankingDe(sala.ronda.secreta).orden[3]);
+  assert.equal(suyo.ok, true, suyo.error);
+  assert.equal(sala.rankingVivo().length, 2);
+
+  sala.intentar(jugadores[0].token, sala.ronda.secreta);
+  const resumen = sala.cerrarRonda();
+  assert.equal(resumen.podio.length, 1);
+  assert.ok(host.puntos > 0, 'el anfitrión puntúa por cercanía');
+  assert.ok(sala.clasificacion().some((f) => f.esHost), 'sale en la clasificación');
+});
+
+test('en modo marcador el anfitrión ni juega ni puntúa', () => {
+  const { sala, host } = salaCon(1, { anfitrionJuega: false });
+  assert.equal(sala.juega(host), false);
+  sala.empezarRonda();
+  const r = sala.intentar(host.token, 'mesa');
+  assert.equal(r.ok, false);
+  assert.match(r.error, /anfitrión no juega/);
+  assert.equal(sala.rankingVivo().length, 1);
+  sala.cerrarRonda();
+  assert.equal(host.puntos, 0);
+  assert.ok(!sala.clasificacion().some((f) => f.esHost));
 });
 
 test('el jugador que vuelve con su token conserva puntos y nombre', () => {
@@ -185,7 +217,7 @@ test('el orden de llegada reparte puntos decrecientes', () => {
 });
 
 test('quien entra a mitad de ronda puede jugar esa misma ronda', () => {
-  const { sala } = salaCon(1);
+  const { sala } = salaCon(1, { anfitrionJuega: false });
   sala.empezarRonda();
   const tarde = sala.entrar({ nombre: 'Tardon' });
   assert.equal(tarde.ok, true);
@@ -208,7 +240,7 @@ test('las palabras desconocidas no consumen intento', () => {
 });
 
 test('el anfitrión no juega y las pistas van en orden', () => {
-  const { sala, host } = salaCon(1);
+  const { sala, host } = salaCon(1, { anfitrionJuega: false });
   sala.empezarRonda();
   assert.equal(sala.intentar(host.token, 'mesa').ok, false);
 
@@ -220,7 +252,7 @@ test('el anfitrión no juega y las pistas van en orden', () => {
 });
 
 test('la partida acaba al agotar las rondas configuradas', () => {
-  const { sala, jugadores } = salaCon(1, { rondas: 2 });
+  const { sala, jugadores } = salaCon(1, { rondas: 2, anfitrionJuega: false });
   sala.empezarRonda();
   sala.cerrarRonda();
   assert.equal(sala.estado, 'resultados');
@@ -244,30 +276,40 @@ test('no se repite palabra secreta entre rondas', () => {
   }
 });
 
-test('el anfitrión ve los tokens de los demás y los jugadores no', () => {
+test('el anfitrión ve los tokens de los demás, pero no el suyo ni los jugadores', () => {
   const { sala, host, jugadores } = salaCon(2);
   const vistaHost = sala.vista(host.token);
   const vistaJugador = sala.vista(jugadores[0].token);
-  assert.ok(vistaHost.jugadores.every((j) => typeof j.token === 'string'));
+  assert.ok(vistaHost.jugadores.filter((j) => !j.esHost).every((j) => typeof j.token === 'string'));
+  // Sin token propio no hay botón de expulsarse a uno mismo.
+  assert.equal(vistaHost.jugadores.find((j) => j.esHost).token, undefined);
   assert.ok(vistaJugador.jugadores.every((j) => j.token === undefined));
 });
 
-test('la palabra secreta no se filtra a los jugadores durante la ronda', () => {
+test('la palabra secreta no se filtra durante la ronda, ni al anfitrión que juega', () => {
   const { sala, host, jugadores } = salaCon(1);
   sala.empezarRonda();
   assert.equal(sala.vista(jugadores[0].token).ronda.secreta, null);
-  assert.equal(sala.vista(host.token).ronda.secreta, sala.ronda.secreta);
+  assert.equal(sala.vista(host.token).ronda.secreta, null, 'si juega, tampoco la ve');
   sala.cerrarRonda();
   assert.equal(sala.vista(jugadores[0].token).ronda.secreta, sala.ronda.secreta);
+  assert.equal(sala.vista(host.token).ronda.secreta, sala.ronda.secreta);
 });
 
-test('expulsar saca al jugador del ranking', () => {
-  const { sala, jugadores } = salaCon(2);
+test('en modo marcador el anfitrión sí ve la palabra secreta', () => {
+  const { sala, host } = salaCon(1, { anfitrionJuega: false });
+  sala.empezarRonda();
+  assert.equal(sala.vista(host.token).ronda.secreta, sala.ronda.secreta);
+});
+
+test('expulsar saca al jugador del ranking, y al anfitrión no se le expulsa', () => {
+  const { sala, host, jugadores } = salaCon(2, { anfitrionJuega: false });
   sala.empezarRonda();
   sala.intentar(jugadores[0].token, 'mesa');
   sala.expulsar(jugadores[0].token);
   assert.equal(sala.rankingVivo().length, 1);
   assert.equal(sala.entrar({ token: jugadores[0].token }).ok, false);
+  assert.equal(sala.expulsar(host.token), null);
 });
 
 test('el gestor crea códigos únicos de 6 cifras y limpia salas muertas', () => {

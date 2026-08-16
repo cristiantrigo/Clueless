@@ -104,6 +104,7 @@
             <option value="dificil">Difícil — abstractas</option>
           </select>
         </label>
+        <label class="campo-check"><input type="checkbox" id="cfg-anfitrion" checked> Yo también juego <small>(si lo quitas, tu pantalla queda de marcador)</small></label>
         <label class="campo-check"><input type="checkbox" id="cfg-pistas" checked> Pistas automáticas durante la ronda</label>
         <label class="campo-check"><input type="checkbox" id="cfg-seguir" checked> La ronda sigue tras el primer acierto (para el podio)</label>
       </div>
@@ -112,13 +113,13 @@
     <div class="acciones host-only">
       <button class="btn grande" id="btn-empezar">Empezar la partida</button>
     </div>
-    <p class="espera jugador-only">Cuando el anfitrión empiece, aparecerá aquí la primera ronda. 🍿</p>
+    <p class="espera invitado-only">Cuando el anfitrión empiece, aparecerá aquí la primera ronda. 🍿</p>
   </div>
 
   <!-- ── Ronda ── -->
   <div class="vista" id="v-ronda" data-panel="intentos">
     <!-- Consola fija: en el móvil se escribe sin tener que volver arriba. -->
-    <div class="consola jugador-only">
+    <div class="consola juega-only">
       <form id="form-intento" autocomplete="off">
         <input id="in-palabra" placeholder="Escribe una palabra…" maxlength="24"
                autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false"
@@ -129,7 +130,7 @@
     </div>
 
     <!-- En móvil se alterna entre los propios intentos y el marcador. -->
-    <nav class="pestanas jugador-only" id="ui-pestanas">
+    <nav class="pestanas juega-only" id="ui-pestanas">
       <button type="button" class="pestana activa" data-ir="intentos">
         Tus intentos <span class="pill" id="ui-n-intentos">0</span>
       </button>
@@ -138,8 +139,16 @@
       </button>
     </nav>
 
+    <div class="panel host-only controles-host">
+      <p class="secreta-host" id="ui-secreta-fila">Palabra secreta: <b id="ui-secreta-host">—</b></p>
+      <div class="fila-botones">
+        <button class="btn mini" id="btn-pista">Dar pista</button>
+        <button class="btn mini fantasma" id="btn-terminar">Terminar ronda</button>
+      </div>
+    </div>
+
     <div class="ronda-grid">
-      <div class="columna-juego jugador-only" data-panel="intentos">
+      <div class="columna-juego juega-only" data-panel="intentos">
         <div class="ultimo" id="ui-ultimo" hidden>
           <span class="ultimo-palabra"></span>
           <span class="ultimo-pos"></span>
@@ -164,13 +173,6 @@
           <ul id="ui-pistas"></ul>
         </div>
 
-        <div class="panel host-only controles-host">
-          <p class="secreta-host">Palabra secreta: <b id="ui-secreta-host">—</b></p>
-          <div class="fila-botones">
-            <button class="btn mini" id="btn-pista">Dar pista</button>
-            <button class="btn mini fantasma" id="btn-terminar">Terminar ronda</button>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -198,7 +200,7 @@
     <div class="acciones host-only">
       <button class="btn grande" id="btn-siguiente">Siguiente ronda</button>
     </div>
-    <p class="espera jugador-only">Esperando al anfitrión para la siguiente ronda…</p>
+    <p class="espera invitado-only">Esperando al anfitrión para la siguiente ronda…</p>
   </div>
 
   <!-- ── Final ── -->

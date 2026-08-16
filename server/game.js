@@ -38,6 +38,7 @@ const CONFIG_POR_DEFECTO = {
   dificultad: 'mezcla', // facil | normal | dificil | mezcla
   segundos: 240,
   maxJugadores: LIMITES.jugadoresPorDefecto,
+  anfitrionJuega: true, // desactívalo para usar la pantalla del anfitrión como marcador
   pistasAuto: true,
   seguirTrasAcierto: true, // la ronda continúa tras el primer acierto (para el podio)
 };
@@ -96,6 +97,7 @@ export class Sala {
     if (parcial.dificultad !== undefined && ['facil', 'normal', 'dificil', 'mezcla'].includes(parcial.dificultad)) {
       c.dificultad = parcial.dificultad;
     }
+    if (parcial.anfitrionJuega !== undefined) c.anfitrionJuega = Boolean(parcial.anfitrionJuega);
     if (parcial.pistasAuto !== undefined) c.pistasAuto = Boolean(parcial.pistasAuto);
     if (parcial.seguirTrasAcierto !== undefined) c.seguirTrasAcierto = Boolean(parcial.seguirTrasAcierto);
     return c;
@@ -107,6 +109,16 @@ export class Sala {
 
   get activos() {
     return this.listaJugadores.filter((j) => !j.expulsado);
+  }
+
+  /** ¿Le toca jugar a este jugador? El anfitrión sólo si la sala lo permite. */
+  juega(jugador) {
+    return Boolean(jugador) && !jugador.expulsado && (!jugador.esHost || this.config.anfitrionJuega);
+  }
+
+  /** Todos los que ocupan plaza y salen en el marcador. */
+  get participantes() {
+    return this.activos.filter((j) => this.juega(j));
   }
 
   // ── Entradas y salidas ─────────────────────────────────────────────────────
@@ -129,6 +141,8 @@ export class Sala {
     if (limpio.length < 2) return { ok: false, error: 'Escribe un nombre de al menos 2 letras.' };
 
     if (!esHost) {
+      // El aforo cuenta a los invitados: el anfitrión nunca le quita la plaza
+      // a un amigo, juegue o no.
       if (this.activos.filter((j) => !j.esHost).length >= this.config.maxJugadores) {
         return { ok: false, error: 'La sala está llena.' };
       }
@@ -157,7 +171,7 @@ export class Sala {
 
     // Quien llega con la ronda empezada juega ya, con el tiempo que quede: en
     // una partida entre amigos la gente se incorpora tarde constantemente.
-    if (!esHost && this.estado === 'ronda' && this.ronda && !this.ronda.cerrada) {
+    if (this.juega(jugador) && this.estado === 'ronda' && this.ronda && !this.ronda.cerrada) {
       this.ronda.progreso.set(nuevoToken, { mejor: null, intentos: 0, acertadoEn: null });
       this.ronda.intentos.set(nuevoToken, []);
     }
@@ -221,8 +235,7 @@ export class Sala {
       cerrada: false,
     };
 
-    for (const jugador of this.activos) {
-      if (jugador.esHost) continue;
+    for (const jugador of this.participantes) {
       this.ronda.progreso.set(jugador.token, { mejor: null, intentos: 0, acertadoEn: null });
       this.ronda.intentos.set(jugador.token, []);
     }
@@ -240,7 +253,7 @@ export class Sala {
     }
     const jugador = this.jugadores.get(token);
     if (!jugador || jugador.expulsado) return { ok: false, error: 'No estás en la sala.' };
-    if (jugador.esHost) return { ok: false, error: 'El anfitrión no juega esta ronda.' };
+    if (!this.juega(jugador)) return { ok: false, error: 'En esta sala el anfitrión no juega.' };
 
     const progreso = this.ronda.progreso.get(token);
     if (!progreso) return { ok: false, error: 'Te has incorporado tarde: entras en la siguiente ronda.' };
@@ -401,14 +414,14 @@ export class Sala {
 
   /** Clasificación general acumulada de la partida. */
   clasificacion() {
-    return this.activos
-      .filter((j) => !j.esHost)
+    return this.participantes
       .sort((a, b) => b.puntos - a.puntos || b.victorias - a.victorias)
       .map((j, i) => ({
         puesto: i + 1,
         id: j.id,
         nombre: j.nombre,
         color: j.color,
+        esHost: j.esHost,
         puntos: j.puntos,
         victorias: j.victorias,
         conectado: j.conectado,
@@ -429,16 +442,19 @@ export class Sala {
         nombre: jugador.nombre,
         color: jugador.color,
         esHost: jugador.esHost,
+        juega: this.juega(jugador),
         puntos: jugador.puntos,
         victorias: jugador.victorias,
       },
       jugadores: this.activos
-        .filter((j) => !j.esHost)
+        .filter((j) => !j.esHost || this.config.anfitrionJuega)
         .map((j) => ({
           id: j.id,
-          token: jugador?.esHost ? j.token : undefined, // sólo el anfitrión puede expulsar
+          // Sólo el anfitrión recibe los tokens, y nunca el suyo: no se autoexpulsa.
+          token: jugador?.esHost && !j.esHost ? j.token : undefined,
           nombre: j.nombre,
           color: j.color,
+          esHost: j.esHost,
           conectado: j.conectado,
           puntos: j.puntos,
           victorias: j.victorias,
@@ -449,7 +465,10 @@ export class Sala {
         restantes: this.segundosRestantes,
         cerrada: this.ronda.cerrada,
         pistas: this.ronda.pistas,
-        secreta: this.ronda.cerrada || jugador?.esHost ? this.ronda.secreta : null,
+        secreta:
+          this.ronda.cerrada || (jugador?.esHost && !this.config.anfitrionJuega)
+            ? this.ronda.secreta
+            : null,
       },
       misIntentos: (this.ronda?.intentos.get(token) ?? []).slice(0, 60),
       ranking: this.rankingVivo(),

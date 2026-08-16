@@ -24,9 +24,12 @@ npm install
 npm start           # http://localhost:3000
 ```
 
-- **Anfitrión**: abre la web, pulsa *Crear sala nueva* y proyecta la pantalla (la vista
-  del anfitrión es un marcador grande pensado para una tele). No juega: ve la palabra
-  secreta y controla rondas y pistas.
+- **Anfitrión**: abre la web y pulsa *Crear sala nueva*. **Juega como uno más** y además
+  controla la partida: empezar rondas, dar pistas, cortar la ronda o expulsar a alguien.
+  Como juega, tampoco ve la palabra secreta hasta que la ronda se cierra.
+- **Modo marcador**: si el anfitrión desmarca *Yo también juego*, deja de participar y su
+  pantalla se convierte en un marcador grande para proyectar en la tele; entonces sí ve la
+  palabra secreta. Es lo cómodo cuando alguien hace de presentador.
 - **Jugadores**: entran en la misma dirección, meten el código de 6 cifras y su nombre.
   El botón *Invitar amigos* abre la hoja de compartir del móvil (WhatsApp, Telegram…)
   con el enlace directo `.../?sala=123456`; en escritorio copia el enlace al portapapeles.
@@ -60,13 +63,15 @@ pantalla y luego se amplió al escritorio:
 | --- | --- | --- |
 | Rondas | 5 | 1 – 20 |
 | Minutos por ronda | 4 | 1 – 15 |
-| Jugadores máximo | 20 | 2 – 50 |
+| Jugadores máximo | 20 | 2 – 50 (invitados; el anfitrión va aparte) |
+| El anfitrión juega | Sí | desmárcalo para dejar su pantalla de marcador |
 | Dificultad | Mezcla | fácil / normal / difícil / mezcla |
 | Pistas automáticas | Sí | al 40 %, 65 % y 85 % del tiempo |
 | Seguir tras el primer acierto | Sí | si se desactiva, la ronda acaba con el primer ganador |
 
 El anfitrión puede además dar pistas a mano, terminar la ronda antes de tiempo,
-expulsar a alguien y reiniciar el marcador para jugar otra partida.
+expulsar a alguien y reiniciar el marcador para jugar otra partida. El aforo cuenta sólo
+a los invitados, así que caben 20 amigos **más** el anfitrión.
 
 Las **pistas** salen en este orden: número de letras → campo semántico → letra inicial
 → tres palabras muy cercanas → últimas dos letras → la palabra con letras alternas.
@@ -115,7 +120,7 @@ public/
   app.js          cliente
   styles.css      estilos, móvil primero
 test/
-  juego.test.js   23 pruebas del motor y de la lógica de sala
+  juego.test.js   26 pruebas del motor y de la lógica de sala
   e2e.mjs         partida completa por sockets con anfitrión + 20 jugadores
 ```
 
@@ -132,7 +137,12 @@ npm run test:e2e  # partida real de 20 jugadores contra el servidor
   o cierra la pestaña, vuelve a su sitio con sus puntos e intentos intactos.
 - **Incorporación tardía**: quien entra con la ronda ya empezada juega esa misma ronda con
   el tiempo que quede, en vez de esperar sentado a la siguiente.
-- **La palabra secreta nunca viaja** al cliente de un jugador durante la ronda; sólo la
-  recibe el anfitrión y todos al cerrarse la ronda.
+- **La palabra secreta nunca viaja** al cliente de nadie que esté jugando durante la ronda
+  —tampoco al del anfitrión si participa—; sólo la recibe el anfitrión en modo marcador, y
+  todos al cerrarse la ronda.
+- Con el anfitrión jugando, el juego reparte tres papeles independientes en la interfaz:
+  quien manda (`host-only`), quien juega (`juega-only`) y quien sólo es invitado
+  (`invitado-only`). Sus mandos de ronda van fuera del tablero para que sigan a mano
+  al cambiar de pestaña en el móvil.
 - Las salas abandonadas se limpian solas a los 10 minutos (y cualquier sala a las 3 horas
   de inactividad).

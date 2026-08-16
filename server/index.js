@@ -141,7 +141,7 @@ io.on('connection', (socket) => {
     const sala = sesion && gestor.obtener(sesion.codigo);
     if (!sala) return responder(cb, { ok: false, error: 'Sala no encontrada.' });
     if (sesion.token !== sala.hostToken) return responder(cb, { ok: false, error: 'Sólo el anfitrión.' });
-    if (sala.activos.filter((j) => !j.esHost).length === 0) {
+    if (sala.participantes.length === 0) {
       return responder(cb, { ok: false, error: 'Todavía no hay jugadores en la sala.' });
     }
 

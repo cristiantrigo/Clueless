@@ -26,7 +26,10 @@ await esperar(1200);
 // ── Anfitrión ────────────────────────────────────────────────────────────────
 const host = io(URL, { transports: ['websocket'] });
 await new Promise((r) => host.on('connect', r));
-const sala = await pedir(host, 'crear_sala', { nombre: 'Cristian', config: { rondas: 2, segundos: 60 } });
+const sala = await pedir(host, 'crear_sala', {
+  nombre: 'Cristian',
+  config: { rondas: 2, segundos: 60, anfitrionJuega: false },
+});
 comprobar(sala.ok && /^\d{6}$/.test(sala.codigo), `sala creada con código ${sala.codigo}`);
 
 // ── 20 jugadores ─────────────────────────────────────────────────────────────
@@ -160,6 +163,44 @@ comprobar(reinicio.ok, 'el anfitrión puede volver a empezar');
 await esperar(200);
 comprobar(jugadores[1].vista.estado === 'lobby' && jugadores[1].vista.yo.puntos === 0,
   'al reiniciar todos vuelven al lobby con el marcador a cero');
+
+// ── El anfitrión jugando ─────────────────────────────────────────────────────
+const anfi = io(URL, { transports: ['websocket'] });
+await new Promise((r) => anfi.on('connect', r));
+const sala2 = await pedir(anfi, 'crear_sala', { nombre: 'Cris', config: { rondas: 1, segundos: 60 } });
+comprobar(sala2.vista.yo.juega === true, 'el anfitrión juega por defecto');
+
+let vistaAnfi = sala2.vista;
+anfi.on('estado', (v) => { vistaAnfi = v; });
+
+const invitado = io(URL, { transports: ['websocket'] });
+await new Promise((r) => invitado.on('connect', r));
+await pedir(invitado, 'unirse', { codigo: sala2.codigo, nombre: 'Ana' });
+await esperar(200);
+comprobar(vistaAnfi.jugadores.some((j) => j.esHost), 'el anfitrión sale en la lista de jugadores');
+
+const finSolo = new Promise((r) => anfi.once('ronda_fin', r));
+comprobar((await pedir(anfi, 'empezar_ronda', {})).ok, 'arranca la ronda con el anfitrión dentro');
+await esperar(300);
+comprobar(vistaAnfi.ronda.secreta === null, 'jugando, el anfitrión tampoco ve la palabra secreta');
+
+const suyo = await pedir(anfi, 'intentar', { palabra: 'montaña' });
+comprobar(suyo.ok, `el anfitrión puede probar palabras: ${suyo.ok ? '#' + suyo.intento.posicion : suyo.error}`);
+await esperar(250);
+comprobar(vistaAnfi.ranking.length === 2, 'el anfitrión aparece en el ranking en vivo');
+
+await pedir(anfi, 'terminar_ronda', {});
+const finalSolo = await finSolo;
+comprobar(typeof finalSolo.secreta === 'string', `al cerrar se revela la palabra: «${finalSolo.secreta}»`);
+await esperar(250);
+comprobar(vistaAnfi.yo.puntos > 0, `el anfitrión puntúa por cercanía: ${vistaAnfi.yo.puntos} pts`);
+comprobar(vistaAnfi.clasificacion.some((c) => c.esHost), 'y sale en la clasificación general');
+
+// Y se puede volver al modo marcador.
+await pedir(anfi, 'configurar', { config: { anfitrionJuega: false } });
+await esperar(250);
+comprobar(vistaAnfi.yo.juega === false, 'el anfitrión puede volver al modo marcador');
+anfi.close(); invitado.close();
 
 // ── Cierre ───────────────────────────────────────────────────────────────────
 [host, revuelta, ...jugadores.map((j) => j.sock)].forEach((s) => s.close());

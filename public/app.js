@@ -9,6 +9,7 @@
     codigo: null,
     token: null,
     esHost: false,
+    juega: false,
     vista: null,
     finRonda: 0,
     tic: null,
@@ -103,15 +104,17 @@
     if (!vista) return;
     estado.vista = vista;
     estado.esHost = Boolean(vista.yo?.esHost);
+    estado.juega = Boolean(vista.yo?.juega);
     document.body.classList.toggle('es-host', estado.esHost);
+    document.body.classList.toggle('juega', estado.juega);
 
     $('#ui-codigo').textContent = vista.codigo;
     $('#ui-codigo-grande').textContent = vista.codigo;
     $('#ui-total').textContent = vista.totalPalabras.toLocaleString('es-ES');
     $('#ui-url').textContent = `${location.host}${location.pathname}`.replace(/\/$/, '');
     $('#ui-yo').innerHTML = vista.yo
-      ? `<b>${escapar(vista.yo.nombre)}</b>` +
-        (vista.yo.esHost ? '<span class="pts">anfitrión</span>' : `<span class="pts">${vista.yo.puntos} pts</span>`)
+      ? `<b>${escapar(vista.yo.nombre)}${vista.yo.esHost ? ' 👑' : ''}</b>` +
+        (vista.yo.juega ? `<span class="pts">${vista.yo.puntos} pts</span>` : '<span class="pts">marcador</span>')
       : '';
 
     document.body.dataset.estado = vista.estado;
@@ -141,11 +144,15 @@
       pintarIntentos(vista.misIntentos);
       pintarRanking(vista.ranking, vista.yo?.id);
       pintarPistas(vista.ronda.pistas);
-      if (estado.esHost) $('#ui-secreta-host').textContent = vista.ronda.secreta ?? '—';
-      bloquearIntentos(Boolean(vista.misIntentos.find((i) => i.posicion === 1)));
-      $('#ui-n-intentos').textContent = vista.misIntentos.length;
-      const mio = vista.ranking.find((f) => f.id === vista.yo?.id);
-      $('#ui-mi-puesto').textContent = mio && mio.mejor !== null ? `${mio.puesto}º` : '—';
+      const enseñarSecreta = estado.esHost && !estado.juega;
+      $('#ui-secreta-fila').hidden = !enseñarSecreta;
+      if (enseñarSecreta) $('#ui-secreta-host').textContent = vista.ronda.secreta ?? '—';
+      if (estado.juega) {
+        bloquearIntentos(Boolean(vista.misIntentos.find((i) => i.posicion === 1)));
+        $('#ui-n-intentos').textContent = vista.misIntentos.length;
+        const mio = vista.ranking.find((f) => f.id === vista.yo?.id);
+        $('#ui-mi-puesto').textContent = mio && mio.mejor !== null ? `${mio.puesto}º` : '—';
+      }
     } else {
       pararCrono();
     }
@@ -167,7 +174,8 @@
     for (const j of vista.jugadores) {
       const li = document.createElement('li');
       li.className = j.conectado ? '' : 'desconectado';
-      li.innerHTML = `<span class="punto" style="background:${j.color}"></span><span>${escapar(j.nombre)}</span>`;
+      li.innerHTML = `<span class="punto" style="background:${j.color}"></span>` +
+        `<span>${escapar(j.nombre)}</span>` + (j.esHost ? '<span class="corona" title="Anfitrión">👑</span>' : '');
       if (estado.esHost && j.token) {
         const x = document.createElement('button');
         x.className = 'expulsar';
@@ -181,7 +189,9 @@
       }
       lista.append(li);
     }
-    $('#ui-contador').textContent = `${vista.jugadores.length}/${vista.config.maxJugadores}`;
+    // El límite es de invitados: el anfitrión va aparte aunque juegue.
+    const invitados = vista.jugadores.filter((j) => !j.esHost).length;
+    $('#ui-contador').textContent = `${invitados}/${vista.config.maxJugadores}`;
     $('#ui-sin-jugadores').hidden = vista.jugadores.length > 0;
   }
 
@@ -195,6 +205,7 @@
     $('#cfg-max').value = vista.config.maxJugadores;
     $('#out-max').value = vista.config.maxJugadores;
     $('#cfg-dificultad').value = vista.config.dificultad;
+    $('#cfg-anfitrion').checked = vista.config.anfitrionJuega;
     $('#cfg-pistas').checked = vista.config.pistasAuto;
     $('#cfg-seguir').checked = vista.config.seguirTrasAcierto;
   }
@@ -268,7 +279,7 @@
       const li = document.createElement('li');
       li.innerHTML = `
         <span class="medalla">${medalla(f.puesto)}</span>
-        <span class="quien"><span class="punto" style="background:${f.color}"></span> <b>${escapar(f.nombre)}</b></span>
+        <span class="quien"><span class="punto" style="background:${f.color}"></span> <b>${escapar(f.nombre)}</b>${f.esHost ? ' <span class="corona">👑</span>' : ''}</span>
         <span class="detalle"><b>${f.puntos} pts</b><small>${f.victorias} ${f.victorias === 1 ? 'ronda ganada' : 'rondas ganadas'}</small></span>`;
       lista.append(li);
     }
@@ -371,7 +382,8 @@
   $('#btn-invitar').addEventListener('click', invitar);
 
   // Ajustes del anfitrión: se envían al soltar el control.
-  const controles = ['#cfg-rondas', '#cfg-minutos', '#cfg-max', '#cfg-dificultad', '#cfg-pistas', '#cfg-seguir'];
+  const controles = ['#cfg-rondas', '#cfg-minutos', '#cfg-max', '#cfg-dificultad',
+    '#cfg-anfitrion', '#cfg-pistas', '#cfg-seguir'];
   for (const sel of controles) {
     const el = $(sel);
     el.addEventListener('input', () => {
@@ -387,6 +399,7 @@
           segundos: Number($('#cfg-minutos').value) * 60,
           maxJugadores: Number($('#cfg-max').value),
           dificultad: $('#cfg-dificultad').value,
+          anfitrionJuega: $('#cfg-anfitrion').checked,
           pistasAuto: $('#cfg-pistas').checked,
           seguirTrasAcierto: $('#cfg-seguir').checked,
         },
@@ -407,7 +420,7 @@
     mensaje('');
     irA('intentos');
     aviso(`Ronda ${numero} de ${total}. ¡Ya!`, 'entra');
-    if (!estado.esHost) setTimeout(() => $('#in-palabra').focus(), 100);
+    if (estado.juega) setTimeout(() => $('#in-palabra').focus(), 100);
   });
 
   socket.on('acierto', ({ nombre, primero, posicionLlegada, segundos }) => {
