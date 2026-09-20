@@ -417,6 +417,46 @@ body.es-host:not(.juega) .panel h3 { font-size: 1.25rem; }
 .podio .quien b, .clasificacion .quien b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .podio .detalle, .clasificacion .detalle { text-align: right; font-variant-numeric: tabular-nums; }
 .podio .detalle small, .clasificacion .detalle small { display: block; color: var(--tenue); font-size: .75rem; }
+.probaron details {
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid var(--panel-borde);
+  border-radius: 12px;
+  margin-bottom: 7px;
+  overflow: hidden;
+}
+.probaron summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  min-height: 46px;
+}
+.probaron summary::-webkit-details-marker { display: none; }
+.probaron summary::after {
+  content: '▾';
+  margin-left: auto;
+  color: var(--tenue);
+  transition: transform .15s ease;
+}
+.probaron details[open] summary::after { transform: rotate(180deg); }
+.probaron .quien-nombre { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.probaron .resumen-mejor { color: var(--tenue); font-size: .85rem; white-space: nowrap; }
+.probaron .lista { padding: 0 14px 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+.probaron .palabra-probada {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .28);
+  font-size: .88rem;
+}
+.probaron .palabra-probada b { font-weight: 700; }
+.probaron .palabra-probada small { font-variant-numeric: tabular-nums; opacity: .8; }
+.probaron .y-mas { color: #8d84b5; font-size: .82rem; align-self: center; font-style: italic; }
+
 .cerca-final { margin-top: 14px; color: var(--tenue); font-size: .9rem; line-height: 1.7; }
 .clasificacion.grande li { padding: 18px; font-size: 1.15rem; }
 .titulo-final { text-align: center; font-size: clamp(1.8rem, 6vw, 2.6rem); margin-bottom: 24px; }

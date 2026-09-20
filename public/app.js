@@ -197,6 +197,7 @@
 
     if (vista.estado === 'resultados' || vista.estado === 'final') {
       pintarClasificacion(vista.clasificacion, '#ui-clasificacion');
+      if (vista.ronda?.loQueProbaron) pintarLoQueProbaron(vista.ronda.loQueProbaron);
     }
     if (vista.estado === 'final') {
       pintarClasificacion(vista.clasificacion, '#ui-final');
@@ -307,6 +308,36 @@
       const li = document.createElement('li');
       li.textContent = p;
       ul.append(li);
+    }
+  }
+
+  /** Lo que escribió cada uno, revelado al cerrar la ronda. */
+  function pintarLoQueProbaron(filas) {
+    const panel = $('#ui-panel-probaron');
+    const caja = $('#ui-probaron');
+    panel.hidden = !filas || filas.length === 0;
+    caja.innerHTML = '';
+    if (panel.hidden) return;
+
+    for (const f of filas) {
+      const mejor = f.intentos[0];
+      const det = document.createElement('details');
+      det.innerHTML =
+        '<summary>' +
+          `<span class="punto" style="background:${f.color}"></span>` +
+          `<span class="quien-nombre">${escapar(f.nombre)}${f.esHost ? ' 👑' : ''}</span>` +
+          `<span class="resumen-mejor">${f.acerto ? '✅ la sacó' : `mejor #${mejor.posicion.toLocaleString('es-ES')}`}` +
+            ` · ${f.total} ${f.total === 1 ? 'intento' : 'intentos'}</span>` +
+        '</summary>' +
+        '<div class="lista">' +
+          f.intentos.map((i) =>
+            `<span class="palabra-probada"><b class="${i.nivel.clase}">${escapar(i.palabra)}</b>` +
+            `<small>#${i.posicion.toLocaleString('es-ES')}</small></span>`).join('') +
+          (f.total > f.intentos.length
+            ? `<span class="y-mas">y ${f.total - f.intentos.length} más</span>`
+            : '') +
+        '</div>';
+      caja.append(det);
     }
   }
 
@@ -492,6 +523,8 @@
       podio.append(li);
     }
     $('#ui-nadie').hidden = resumen.podio.length > 0;
+
+    pintarLoQueProbaron(resumen.loQueProbaron);
 
     $('#ui-cerca').innerHTML = resumen.cerca.length
       ? 'Los que más se acercaron sin acertar: ' +

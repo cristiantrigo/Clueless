@@ -131,7 +131,9 @@ test('los vectores de Numberbatch están y aportan asociación del mundo real', 
 
 test('el vocabulario jugable es grande y el léxico sigue siendo su columna', () => {
   // El jugador puede escribir cualquier palabra corriente del español…
-  assert.ok(TOTAL_PALABRAS >= 20000, `sólo ${TOTAL_PALABRAS} palabras jugables`);
+  // Curado, no grande por grande: 13.500 palabras limpias aceptan más intentos
+  // reales que 25.000 con flexiones y extranjerismos dentro.
+  assert.ok(TOTAL_PALABRAS >= 12000, `sólo ${TOTAL_PALABRAS} palabras jugables`);
   // …pero las relaciones de taxonomía salen del léxico escrito a mano.
   assert.ok(PALABRAS_LEXICO.length >= 2200, `sólo ${PALABRAS_LEXICO.length} en el léxico`);
   // Y la palabra secreta sale siempre de ahí, que es la que está garantizada
@@ -146,6 +148,17 @@ test('el vocabulario grande no trae flexiones que compitan con su palabra', () =
   // Con «ventana» secreta, «ventanas» en el puesto 1 arruinaría la ronda.
   for (const flexion of ['ventanas', 'casas', 'perros', 'gata', 'corriendo', 'comiendo']) {
     assert.ok(!existe(flexion), `${flexion} no debería estar en el vocabulario`);
+  }
+  // Ni conjugaciones de la propia palabra secreta: con «quemar» salían
+  // «queman, quemaran, quemare, quemaria, quemarlo, quemarte, quemo» como los
+  // siete vecinos más cercanos, que es regalar la ronda.
+  for (const forma of ['queman', 'quemaran', 'quemare', 'quemaria', 'quemarlo', 'quemo', 'quemalo', 'ardio']) {
+    assert.ok(!existe(forma), `${forma} no debería estar en el vocabulario`);
+  }
+  // Pero los sustantivos que coinciden con una forma verbal se conservan:
+  // «casa» es también de «casar», y «cuenta» de «contar».
+  for (const nombre of ['casa', 'cuenta', 'juego', 'cena', 'paso', 'llamada', 'bebida', 'entrada']) {
+    assert.ok(existe(nombre), `${nombre} debería seguir en el vocabulario`);
   }
   // Pero sí se resuelven a su lema al escribirlas.
   assert.equal(resolver('ventanas'), 'ventana');

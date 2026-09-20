@@ -49,8 +49,74 @@ const DESTINO = path.join(DATOS, 'vectores.bin');
  */
 const ORTOGRAFIA_AJENA = /[kw]|sh|ck|ph|th|oo|ee|[^aeiounslrdzjxy]$/;
 
-/** Formas verbales conjugadas: el juego trabaja con infinitivos. */
-const CONJUGADA = /(?:ando|iendo|aron|ieron|aba|abas|aban|abamos|amos|emos|imos|aste|iste|ara|aras|iera|ase|ese|arian|erian|irian|aremos|eremos|iremos)$/;
+/**
+ * Formas verbales conjugadas. Una lista de sufijos sueltos no basta: con
+ * «quemar» de secreta salían «queman, quemaran, quemare, quemaria, quemarlo,
+ * quemarte, quemo, quemandose» como las ocho palabras más cercanas, que es
+ * regalar la ronda.
+ *
+ * Aquí se ancla en el infinitivo: una palabra es conjugación si se construye
+ * sobre un infinitivo que está en el vocabulario. Y como muchos sustantivos
+ * coinciden con una forma verbal («casa» de «casar», «juego» de «jugar»), hace
+ * falta además que el vector confirme que son la misma cosa.
+ */
+const TERMINACIONES = [
+  // Sobre la raíz (quemar → quem-)
+  'ando', 'iendo', 'andose', 'iendose',
+  'o', 'as', 'a', 'amos', 'ais', 'an',
+  'es', 'e', 'emos', 'eis', 'en',
+  'aba', 'abas', 'abamos', 'abais', 'aban',
+  'ia', 'ias', 'iamos', 'iais', 'ian',
+  'aste', 'asteis', 'aron', 'iste', 'isteis', 'ieron',
+  'ara', 'aras', 'aramos', 'aran', 'ase', 'ases', 'asen',
+  'iera', 'ieras', 'ieran', 'iese', 'iesen',
+  'io', 'ire', 'iras', 'ira', 'iremos', 'iran', 'iria', 'irias', 'irian',
+  'ere', 'eras', 'era', 'eremos', 'eran', 'eria', 'erias', 'erian',
+];
+
+/** Pronombres pegados al verbo: quemarlo, quemarte, quemándose. */
+const ENCLITICOS = ['lo', 'la', 'le', 'los', 'las', 'les', 'me', 'te', 'se', 'nos'];
+
+/** Lo que se le puede añadir a un infinitivo entero: quemar + ia/an/e/lo… */
+const TRAS_INFINITIVO = ['e', 'es', 'emos', 'eis', 'en', 'a', 'as', 'an', 'amos',
+  'ia', 'ias', 'iamos', 'ian', ...ENCLITICOS];
+
+/**
+ * Devuelve el infinitivo del que procede `palabra`, si lo hay en `vocabulario`.
+ * Los participios (-ado, -ido, -ada, -ida) se dejan fuera a propósito: dan
+ * sustantivos de pleno derecho como «entrada», «salida» o «vestido».
+ */
+function infinitivoDe(palabra, vocabulario, profundidad = 0) {
+  // Pronombre pegado a cualquier forma, no sólo al infinitivo: «quémalo» es
+  // «quema» + «lo», y «quemarlo» es el infinitivo + «lo».
+  if (profundidad === 0) {
+    for (const pronombre of ENCLITICOS) {
+      if (!palabra.endsWith(pronombre)) continue;
+      const sinPronombre = palabra.slice(0, -pronombre.length);
+      if (sinPronombre.length < 4) continue;
+      if (vocabulario.has(sinPronombre) && /(?:ar|er|ir)$/.test(sinPronombre)) return sinPronombre;
+      const infinitivo = infinitivoDe(sinPronombre, vocabulario, 1);
+      if (infinitivo) return infinitivo;
+    }
+  }
+
+  // quemar + lo → quemarlo;  quemar + ian → quemarian
+  for (const cola of TRAS_INFINITIVO) {
+    if (!palabra.endsWith(cola)) continue;
+    const base = palabra.slice(0, -cola.length);
+    if (base.length >= 4 && /(?:ar|er|ir)$/.test(base) && vocabulario.has(base)) return base;
+  }
+  // quem + an → queman
+  for (const cola of TERMINACIONES) {
+    if (!palabra.endsWith(cola)) continue;
+    const raiz = palabra.slice(0, -cola.length);
+    if (raiz.length < 3) continue;
+    for (const inf of ['ar', 'er', 'ir']) {
+      if (vocabulario.has(raiz + inf)) return raiz + inf;
+    }
+  }
+  return null;
+}
 
 /** ¿Es una flexión de otra palabra que ya está en el vocabulario? */
 function esFlexion(palabra, presentes) {
@@ -106,30 +172,28 @@ async function construir() {
   const delLexico = new Set(PALABRAS_LEXICO);
 
   // Candidatas por frecuencia, en orden: las más usadas primero.
+  const TOPE_FRECUENCIA = 30000;
   const frecuentes = [];
   const vistas = new Set();
   for (const linea of fs.readFileSync(CACHE_FRECUENCIA, 'utf8').split('\n')) {
     const palabra = normalizar(linea.split(' ')[0]);
     if (palabra.length < 3 || vistas.has(palabra)) continue;
     vistas.add(palabra);
-    frecuentes.push(palabra);
+    if (frecuentes.length < TOPE_FRECUENCIA) frecuentes.push(palabra);
   }
 
   const admitidas = new Set(delLexico);
-  const descartes = { ajena: 0, conjugada: 0, flexion: 0 };
+  const descartes = { ajena: 0, flexion: 0, conjugada: 0 };
   for (const palabra of frecuentes) {
     if (admitidas.has(palabra)) continue;
     if (ORTOGRAFIA_AJENA.test(palabra)) { descartes.ajena++; continue; }
-    if (CONJUGADA.test(palabra)) { descartes.conjugada++; continue; }
     if (esFlexion(palabra, vistas)) { descartes.flexion++; continue; }
     admitidas.add(palabra);
   }
 
   console.log(`\nCandidatas por frecuencia: ${frecuentes.length}`);
   console.log(`  descartadas por ortografía ajena: ${descartes.ajena}`);
-  console.log(`  descartadas por ser conjugación:  ${descartes.conjugada}`);
   console.log(`  descartadas por ser flexión:      ${descartes.flexion}`);
-  console.log(`Admitidas (con el léxico a mano):   ${admitidas.size}`);
 
   // Sólo se quedan las que además tienen vector.
   const encontrados = new Map();
@@ -153,12 +217,6 @@ async function construir() {
     encontrados.set(clave, crudo.map((x) => Math.max(-127, Math.min(127, Math.round((x / norma) * 127)))));
   }
 
-  // Variantes de género del mismo concepto: «gata» junto a «gato» es la misma
-  // palabra dos veces, y quien escribe una u otra debería recibir lo mismo. No
-  // se pueden borrar a ciegas —«casa»/«caso» o «rata»/«rato» son palabras
-  // distintas—, así que lo decide el propio vector: las variantes reales rondan
-  // 0,85-0,93 de coseno, y las palabras distintas no pasan de 0,2.
-  const UMBRAL_VARIANTE = 0.8;
   const coseno = (x, y) => {
     let producto = 0;
     let nx = 0;
@@ -171,6 +229,28 @@ async function construir() {
     return producto / (Math.sqrt(nx) * Math.sqrt(ny) || 1);
   };
 
+  // Conjugaciones: el patrón dice que PUEDE venir de un infinitivo, y el vector
+  // confirma que es la misma palabra. Hacen falta las dos cosas, porque muchos
+  // sustantivos coinciden con una forma verbal y no se pueden perder: «casa» es
+  // también de «casar», «juego» de «jugar» y «cuenta» de «contar».
+  const UMBRAL_MISMA = 0.68;
+  for (const palabra of [...encontrados.keys()]) {
+    if (delLexico.has(palabra)) continue;
+    const infinitivo = infinitivoDe(palabra, encontrados);
+    if (!infinitivo || infinitivo === palabra) continue;
+    if (coseno(encontrados.get(palabra), encontrados.get(infinitivo)) > UMBRAL_MISMA) {
+      encontrados.delete(palabra);
+      descartes.conjugada++;
+    }
+  }
+  console.log(`  descartadas por ser conjugación:  ${descartes.conjugada}`);
+
+  // Variantes de género del mismo concepto: «gata» junto a «gato» es la misma
+  // palabra dos veces, y quien escribe una u otra debería recibir lo mismo. No
+  // se pueden borrar a ciegas —«casa»/«caso» o «rata»/«rato» son palabras
+  // distintas—, así que lo decide el propio vector: las variantes reales rondan
+  // 0,85-0,93 de coseno, y las palabras distintas no pasan de 0,2.
+  const UMBRAL_VARIANTE = 0.8;
   let fusionadas = 0;
   for (const palabra of [...encontrados.keys()]) {
     if (!palabra.endsWith('a') || delLexico.has(palabra)) continue;

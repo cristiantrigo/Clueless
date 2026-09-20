@@ -371,11 +371,52 @@ export class Sala {
         };
       }),
       cerca: this.rankingVivo().filter((r) => !r.acertado).slice(0, 5),
+      loQueProbaron: this.loQueProbaron(),
       esFinal: this.estado === 'final',
     };
 
     this.ultimaActividad = Date.now();
     return resumen;
+  }
+
+  /**
+   * Lo que escribió cada jugador durante la ronda, para enseñarlo al cerrarla.
+   *
+   * Durante la ronda los intentos son privados —si no, se copiarían unos a
+   * otros—, pero al terminar son la mejor parte: ver que alguien llegó a la
+   * palabra por «tractor» es de lo que más se comenta.
+   *
+   * Se manda un máximo por jugador para no inflar el mensaje con salas llenas:
+   * sus mejores intentos y el más disparatado, que es justo el gracioso.
+   */
+  loQueProbaron({ mejores = 10, lejanos = 2 } = {}) {
+    if (!this.ronda) return [];
+
+    const filas = [];
+    for (const [token, lista] of this.ronda.intentos) {
+      const jugador = this.jugadores.get(token);
+      if (!jugador || jugador.expulsado || lista.length === 0) continue;
+
+      const ordenados = [...lista].sort((a, b) => a.posicion - b.posicion);
+      const elegidos = new Map();
+      for (const i of ordenados.slice(0, mejores)) elegidos.set(i.palabra, i);
+      for (const i of ordenados.slice(-lejanos)) elegidos.set(i.palabra, i);
+
+      filas.push({
+        id: jugador.id,
+        nombre: jugador.nombre,
+        color: jugador.color,
+        esHost: jugador.esHost,
+        total: lista.length,
+        acerto: this.ronda.progreso.get(token)?.acertadoEn !== null,
+        intentos: [...elegidos.values()]
+          .sort((a, b) => a.posicion - b.posicion)
+          .map((i) => ({ palabra: i.palabra, posicion: i.posicion, nivel: i.nivel })),
+      });
+    }
+
+    // Quien más se acercó, primero.
+    return filas.sort((a, b) => a.intentos[0].posicion - b.intentos[0].posicion);
   }
 
   get segundosRestantes() {
@@ -472,6 +513,10 @@ export class Sala {
           this.ronda.cerrada || (jugador?.esHost && !this.config.anfitrionJuega)
             ? this.ronda.secreta
             : null,
+        // Sólo con la ronda cerrada: durante el juego los intentos de cada uno
+        // son suyos. Va también aquí, y no sólo en el aviso de cierre, para
+        // que quien se reconecte en la pantalla de resultados los vea igual.
+        loQueProbaron: this.ronda.cerrada ? this.loQueProbaron() : null,
       },
       misIntentos: (this.ronda?.intentos.get(token) ?? []).slice(0, 60),
       ranking: this.rankingVivo(),

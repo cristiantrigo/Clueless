@@ -9,12 +9,14 @@ código de 6 cifras, hasta 20 amigos entran desde el móvil y todos ven en direc
 
 1. Hay una **palabra secreta** en español. Cada jugador escribe la palabra que quiera.
 2. El juego responde con la **posición** de esa palabra en el ranking de cercanía
-   semántica a la secreta: la **#1** es la palabra buscada, la **#23.611** es lo más
+   semántica a la secreta: la **#1** es la palabra buscada, la **#13.582** es lo más
    lejano que hay.
 3. `#847` es 🧊 frío · `#180` es 🙂 templado · `#31` es 🌶️ caliente · `#4` es 🔥 ardiendo.
 4. Un **marcador en vivo** ordena a todos los jugadores por su mejor posición: se ve
    en tiempo real quién va ganando terreno.
-5. El primero en acertar se lleva 1000 puntos, el segundo 800, el tercero 640… y quien
+5. Al cerrar la ronda se revela **lo que probó cada uno**. Durante el juego los intentos
+   son privados, pero al terminar son la mejor parte de la partida.
+6. El primero en acertar se lleva 1000 puntos, el segundo 800, el tercero 640… y quien
    no la saca puntúa igualmente según lo cerca que se quedó.
 
 ## Arrancar
@@ -147,7 +149,7 @@ Las **pistas** salen en este orden: número de letras → campo semántico → l
 El motor es determinista y no llama a ningún servicio: suma **dos fuentes que se
 compensan**, un léxico escrito a mano y unos vectores semánticos descargados una vez.
 
-- **Vocabulario jugable: 23.611 palabras.** Se puede escribir casi cualquier palabra
+- **Vocabulario jugable: 13.582 palabras.** Se puede escribir casi cualquier palabra
   corriente del español.
 - `server/lexicon.js` — **2249 palabras** en español agrupadas en ~350 campos
   semánticos. Cada grupo aporta etiquetas (`animal`, `felino`, `postre`, `abstracto`…)
@@ -168,9 +170,21 @@ secreta, los vecinos más cercanos salían así:
 ventanas, ventanilla, ventanillas, vidriera, windows, escaparate, escaparates, …
 ```
 
-Escribes `ventanas` y estás en el puesto #1 sin haber adivinado nada. De las ~47.000
-candidatas por frecuencia, **un tercio era ruido**: 8.160 flexiones de otra palabra que
-ya estaba, 4.155 conjugaciones y 4.075 extranjerismos. `scripts/construir-vectores.mjs`
+Escribes `ventanas` y estás en el puesto #1 sin haber adivinado nada. De las 30.000
+candidatas por frecuencia, **más de la mitad era ruido**: 8.371 flexiones de otra palabra
+que ya estaba, 5.813 conjugaciones y 4.075 extranjerismos. El vocabulario final es más
+pequeño que uno sin curar y sin embargo acepta más intentos reales: de 25 palabras que
+alguien escribiría jugando con `ventana`, éste admite 23 y uno de 25.000 sin filtrar
+admitía 22.
+
+Las conjugaciones no se cazan con una lista de sufijos. Con `quemar` de palabra secreta,
+los ocho vecinos más cercanos eran `queman, quemaran, quemare, quemaria, quemarlo,
+quemarte, quemo, quemandose`: la ronda regalada. El filtro se ancla en el infinitivo —una
+palabra es conjugación si se construye sobre un infinitivo que está en el vocabulario— y
+además **exige que el vector lo confirme**, porque muchísimos sustantivos coinciden con
+una forma verbal: `casa` lo es de `casar`, `juego` de `jugar` y `cuenta` de `contar`, y
+ninguno puede perderse. Los participios se dejan fuera a propósito: `llamada`, `bebida`,
+`entrada` y `salida` son sustantivos de pleno derecho. `scripts/construir-vectores.mjs`
 los filtra, y además **fusiona las variantes de género** —`gata` con `gato`— usando el
 propio coseno para decidirlo, porque a ciegas no se puede: las variantes reales rondan
 0,85-0,93 y palabras distintas como `casa`/`caso` o `rata`/`rato` no pasan de 0,2. Así
@@ -257,7 +271,7 @@ public/
   app.js          cliente
   styles.css      estilos, móvil primero
 test/
-  juego.test.js   34 pruebas del motor y de la lógica de sala
+  juego.test.js   35 pruebas del motor y de la lógica de sala
   banco.mjs       banco de sentido común: mide 44 pares que cualquiera relacionaría
   e2e.mjs         partida completa por sockets con anfitrión + 20 jugadores
   sesion.mjs      recarga, reconexión y salida, en un navegador de verdad
@@ -281,7 +295,7 @@ distinto tamaño: el puesto 50 entre 23.000 palabras es mucho mejor que entre 2.
 | --- | --- | --- |
 | antes de todas las revisiones | 7,3 % | 10 de 44 |
 | sólo el léxico curado | 0,58 % | 0 |
-| **hoy** | **0,21 %** | **0** |
+| **hoy** | **0,26 %** | **0** |
 
 ## Detalles de implementación
 
