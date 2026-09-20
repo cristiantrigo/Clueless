@@ -303,7 +303,10 @@ export class Sala {
   /** Puntos de consolación al cerrar la ronda, según lo cerca que se quedó. */
   puntosPorCercania(mejorPosicion) {
     if (mejorPosicion === null) return 0;
-    return Math.round(calor(mejorPosicion) * 2); // hasta ~200 puntos
+    // Quien participó nunca se queda a cero: con la palabra en la última
+    // posición el calor redondea a 0, y salir con nada por haber jugado sienta
+    // peor que salir con un punto.
+    return Math.max(1, Math.round(calor(mejorPosicion) * 2)); // hasta ~200 puntos
   }
 
   /** Pistas progresivas sobre la palabra secreta. */

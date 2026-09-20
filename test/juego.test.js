@@ -11,6 +11,7 @@ import {
   vecinas,
   TOTAL_PALABRAS,
   RESERVAS,
+  CON_VECTORES,
 } from '../server/similarity.js';
 
 // ─── Motor semántico ─────────────────────────────────────────────────────────
@@ -106,6 +107,15 @@ test('las partes de una casa no se mezclan con las de una planta', () => {
   const p = rankingDe('ventana').posiciones;
   for (const ajena of ['polen', 'tallo', 'corteza', 'semilla']) {
     assert.ok(p.get(ajena) > 300, `${ajena} sale demasiado cerca de ventana: #${p.get(ajena)}`);
+  }
+});
+
+test('los vectores de Numberbatch están y aportan asociación del mundo real', () => {
+  assert.ok(CON_VECTORES, 'falta data/vectores.bin: regénalo con scripts/construir-vectores.mjs');
+  // Relaciones que un léxico escrito a mano no cubre y los vectores sí.
+  for (const [secreta, asociada] of [['miel', 'abeja'], ['invierno', 'nieve'], ['cama', 'dormir']]) {
+    const p = rankingDe(secreta).posiciones.get(asociada);
+    assert.ok(p <= 40, `${asociada} debería estar cerca de ${secreta}, y está en #${p}`);
   }
 });
 
@@ -284,6 +294,17 @@ test('quien entra a mitad de ronda puede jugar esa misma ronda', () => {
   const acierto = sala.intentar(tarde.jugador.token, sala.ronda.secreta);
   assert.equal(acierto.acierto, true);
   assert.equal(tarde.jugador.puntos, 1000);
+});
+
+test('quien participa nunca se queda con cero puntos', () => {
+  // Con el mejor intento en la última posición el calor redondea a 0, y salir
+  // sin nada por haber jugado sienta peor que salir con un punto.
+  const { sala, jugadores } = salaCon(1, { anfitrionJuega: false });
+  sala.empezarRonda();
+  const { orden } = rankingDe(sala.ronda.secreta);
+  sala.intentar(jugadores[0].token, orden[orden.length - 1]);
+  sala.cerrarRonda();
+  assert.ok(jugadores[0].puntos > 0, 'se quedó a cero habiendo jugado');
 });
 
 test('las palabras desconocidas no consumen intento', () => {

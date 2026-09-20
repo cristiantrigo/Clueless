@@ -141,7 +141,8 @@ Las **pistas** salen en este orden: número de letras → campo semántico → l
 
 ## Cómo funciona la cercanía
 
-No hay dependencias de IA ni servicios externos: el motor es propio y determinista.
+El motor es determinista y no llama a ningún servicio: suma **dos fuentes que se
+compensan**, un léxico escrito a mano y unos vectores semánticos descargados una vez.
 
 - `server/lexicon.js` — **2249 palabras** en español agrupadas en ~350 campos
   semánticos. Cada grupo aporta etiquetas (`animal`, `felino`, `postre`, `abstracto`…)
@@ -150,6 +151,32 @@ No hay dependencias de IA ni servicios externos: el motor es propio y determinis
   etiqueta con IDF** (las raras pesan mucho más que las genéricas) y mide la cercanía
   con coseno. Con la palabra secreta se ordena todo el léxico y esa posición es lo que
   ve el jugador.
+- `data/vectores.bin` — vectores de **ConceptNet Numberbatch** recortados al léxico y
+  cuantizados a un byte por dimensión (679 KB). Ver [`data/LEEME-vectores.md`](data/LEEME-vectores.md).
+
+### Por qué dos fuentes y no una
+
+Cada una sabe lo que a la otra se le escapa, y medirlo por separado lo dejó claro:
+
+| sobre el banco de 44 pares | posición media | peor impostora |
+| --- | --- | --- |
+| sólo el léxico escrito a mano | 20 | #1018 ✅ |
+| sólo Numberbatch | 26 | #46 ❌ |
+| **mezcla al 50 %** | **13** | #1186 ✅ |
+
+El léxico manda en la **taxonomía** —el todo y sus partes, el género y sus especies— y
+es inmune al parecido ortográfico porque las relaciones están escritas a mano. Los
+vectores traen la **asociación del mundo real**, que a un léxico a mano no le cabe: que
+la miel va con la abeja (#76 → #12), el invierno con la nieve (#68 → #16) o la cama con
+dormir (#14 → #3).
+
+Los vectores arrastran un defecto conocido: acercan palabras por escribirse parecido
+(para ellos `rato` está a doce puestos de `gato`). Por eso la mezcla lleva una guarda:
+si dos palabras **no comparten ni una etiqueta** del léxico y además se parecen en las
+letras, su cercanía se recorta al 10 %. Sale gratis —la media no se mueve— y devuelve a
+las impostoras al fondo de la lista.
+
+Si `data/vectores.bin` no está, el juego arranca igual usando sólo el léxico.
 
 **Una palabra pertenece a su propio campo.** Si una palabra da nombre a un campo
 semántico, el motor se la asigna como etiqueta: el nombre de una categoría es su
@@ -201,7 +228,7 @@ public/
   app.js          cliente
   styles.css      estilos, móvil primero
 test/
-  juego.test.js   31 pruebas del motor y de la lógica de sala
+  juego.test.js   33 pruebas del motor y de la lógica de sala
   banco.mjs       banco de sentido común: mide 44 pares que cualquiera relacionaría
   e2e.mjs         partida completa por sockets con anfitrión + 20 jugadores
   sesion.mjs      recarga, reconexión y salida, en un navegador de verdad
@@ -213,12 +240,13 @@ test/
 npm test          # unitarias
 npm run test:e2e  # partida real de 20 jugadores contra el servidor
 npm run banco     # calidad de las relaciones: posición media de 44 pares evidentes
+npm run vectores  # regenera data/vectores.bin desde ConceptNet (sólo al ampliar el léxico)
 ```
 
 El banco es la red de seguridad del motor: mide dónde cae cada par que cualquiera
-relacionaría (`ventana`/`casa`, `coche`/`rueda`, `miel`/`abeja`…). Antes de la última
-revisión la posición media era **165** y diez pares se iban del top 100; ahora la media
-es **18** y no se sale ninguno.
+relacionaría (`ventana`/`casa`, `coche`/`rueda`, `miel`/`abeja`…). Antes de las dos últimas
+revisiones la posición media era **165** y diez pares se iban del top 100; ahora la
+media es **13** y no se sale ninguno.
 
 ## Detalles de implementación
 
