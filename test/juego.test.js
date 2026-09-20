@@ -14,6 +14,7 @@ import {
   PALABRAS_LEXICO,
   RESERVAS,
   CON_VECTORES,
+  tamañoCacheRanking,
 } from '../server/similarity.js';
 
 /**
@@ -149,6 +150,19 @@ test('el vocabulario grande no trae flexiones que compitan con su palabra', () =
   // Pero sí se resuelven a su lema al escribirlas.
   assert.equal(resolver('ventanas'), 'ventana');
   assert.equal(resolver('gatas'), 'gato');
+});
+
+test('el caché de rankings no crece sin límite', () => {
+  // Cada ranking ocupa ~1 MB con el vocabulario actual. Sin tope, una
+  // instancia pequeña acaba reiniciándose, y eso se lleva todas las salas.
+  const usadas = new Set();
+  for (let i = 0; i < 150; i++) rankingDe(elegirSecreta('mezcla', usadas));
+  assert.ok(
+    tamañoCacheRanking() <= 50,
+    `hay ${tamañoCacheRanking()} rankings cacheados tras 150 rondas`,
+  );
+  // Y lo que sigue en el caché se sirve igual de bien.
+  assert.equal(rankingDe('perro').posiciones.get('perro'), 1);
 });
 
 test('el calor baja al alejarse la posición', () => {

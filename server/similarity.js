@@ -275,15 +275,36 @@ export function cercania(a, b) {
 
 // ─── Ranking por palabra secreta ─────────────────────────────────────────────
 
+/**
+ * Rankings ya calculados, con tope.
+ *
+ * Cada entrada ocupa ~1 MB con el vocabulario actual, y antes el caché no se
+ * vaciaba nunca: en una instancia pequeña acababa agotando la memoria y
+ * provocando un reinicio, que es justo lo que se lleva por delante todas las
+ * salas en juego. Calcular un ranking cuesta unos 50 ms, así que descartar el
+ * más antiguo sale mucho más barato que quedarse sin memoria.
+ */
+const TOPE_CACHE = Number(process.env.TOPE_CACHE_RANKING ?? 50);
 const cacheRanking = new Map();
+
+/** Cuántos rankings hay cacheados ahora mismo. Para pruebas y diagnóstico. */
+export function tamañoCacheRanking() {
+  return cacheRanking.size;
+}
 
 /**
  * Devuelve, para una palabra secreta, el mapa palabra -> posición (1 = secreta)
- * y la lista ordenada de todo el léxico de más a menos cercano.
+ * y la lista ordenada de todo el vocabulario de más a menos cercano.
  */
 export function rankingDe(secreta) {
   const cacheada = cacheRanking.get(secreta);
-  if (cacheada) return cacheada;
+  if (cacheada) {
+    // Reinsertar la marca como la usada más recientemente: Map conserva el
+    // orden de inserción, y de ahí sale el descarte.
+    cacheRanking.delete(secreta);
+    cacheRanking.set(secreta, cacheada);
+    return cacheada;
+  }
 
   const puntuadas = PALABRAS.map((p) => [p, cercania(secreta, p)]);
   puntuadas.sort((x, y) => y[1] - x[1] || (x[0] < y[0] ? -1 : 1));
@@ -297,6 +318,9 @@ export function rankingDe(secreta) {
 
   const resultado = { posiciones, orden };
   cacheRanking.set(secreta, resultado);
+  while (cacheRanking.size > TOPE_CACHE) {
+    cacheRanking.delete(cacheRanking.keys().next().value);
+  }
   return resultado;
 }
 
