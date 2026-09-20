@@ -6,6 +6,8 @@
  * código. `server/index.js` se encarga de traducir eso a eventos de Socket.IO.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import {
   calor,
@@ -523,6 +525,63 @@ export class Sala {
       clasificacion: this.clasificacion(),
     };
   }
+
+  // ── Guardar y recuperar ────────────────────────────────────────────────────
+
+  /**
+   * Estado de la sala en algo que se pueda escribir a disco.
+   *
+   * El ranking de la ronda no se guarda: son decenas de miles de entradas y se
+   * recalcula en 50 ms a partir de la palabra secreta. Los identificadores de
+   * socket tampoco, porque ninguna conexión sobrevive a un reinicio.
+   */
+  serializar() {
+    return {
+      codigo: this.codigo,
+      creada: this.creada,
+      config: this.config,
+      estado: this.estado,
+      numeroRonda: this.numeroRonda,
+      usadas: [...this.usadas],
+      hostToken: this.hostToken,
+      ultimaActividad: this.ultimaActividad,
+      jugadores: this.listaJugadores.map((j) => ({ ...j, socketId: null, conectado: false })),
+      ronda: this.ronda && {
+        numero: this.ronda.numero,
+        secreta: this.ronda.secreta,
+        inicio: this.ronda.inicio,
+        acaba: this.ronda.acaba,
+        intentos: [...this.ronda.intentos],
+        progreso: [...this.ronda.progreso],
+        aciertos: this.ronda.aciertos,
+        pistas: this.ronda.pistas,
+        pistasDadas: this.ronda.pistasDadas,
+        cerrada: this.ronda.cerrada,
+      },
+    };
+  }
+
+  /** Reconstruye una sala guardada. */
+  static restaurar(datos) {
+    const sala = new Sala(datos.codigo, datos.config);
+    sala.creada = datos.creada;
+    sala.estado = datos.estado;
+    sala.numeroRonda = datos.numeroRonda;
+    sala.usadas = new Set(datos.usadas);
+    sala.hostToken = datos.hostToken;
+    sala.ultimaActividad = datos.ultimaActividad;
+    sala.jugadores = new Map(datos.jugadores.map((j) => [j.token, j]));
+
+    if (datos.ronda) {
+      sala.ronda = {
+        ...datos.ronda,
+        ranking: rankingDe(datos.ronda.secreta),
+        intentos: new Map(datos.ronda.intentos),
+        progreso: new Map(datos.ronda.progreso),
+      };
+    }
+    return sala;
+  }
 }
 
 // ─── Gestor ──────────────────────────────────────────────────────────────────
@@ -558,5 +617,56 @@ export class GestorSalas {
       const abandonada = sala.vacia && ahora - sala.ultimaActividad > 10 * 60 * 1000;
       if (inactiva || abandonada) this.eliminar(codigo);
     }
+  }
+
+  // ── Guardar y recuperar ──────────────────────────────────────────────────
+
+  /**
+   * Vuelca las salas a disco de forma atómica: primero a un fichero temporal y
+   * después un renombrado, para que un corte a mitad no deje un fichero roto
+   * que impida arrancar.
+   */
+  volcar(ruta) {
+    const vivas = [...this.salas.values()].filter((s) => s.estado !== 'final' || !s.vacia);
+    if (vivas.length === 0) {
+      if (fs.existsSync(ruta)) fs.rmSync(ruta, { force: true });
+      return 0;
+    }
+    fs.mkdirSync(path.dirname(ruta), { recursive: true });
+    const temporal = `${ruta}.tmp`;
+    fs.writeFileSync(temporal, JSON.stringify({ version: 1, ts: Date.now(), salas: vivas.map((s) => s.serializar()) }));
+    fs.renameSync(temporal, ruta);
+    return vivas.length;
+  }
+
+  /**
+   * Recupera las salas guardadas.
+   * @param {(sala: Sala) => void} alRestaurar  para rearmar los temporizadores,
+   *   que dependen de los sockets y por tanto no viven aquí.
+   * @returns {number} salas recuperadas
+   */
+  cargar(ruta, alRestaurar = () => {}) {
+    if (!fs.existsSync(ruta)) return 0;
+    let guardado;
+    try {
+      guardado = JSON.parse(fs.readFileSync(ruta, 'utf8'));
+    } catch (err) {
+      console.warn('No se pudo leer el estado guardado, se empieza vacío:', err.message);
+      return 0;
+    }
+    if (guardado?.version !== 1 || !Array.isArray(guardado.salas)) return 0;
+
+    let recuperadas = 0;
+    for (const datos of guardado.salas) {
+      try {
+        const sala = Sala.restaurar(datos);
+        this.salas.set(sala.codigo, sala);
+        alRestaurar(sala);
+        recuperadas++;
+      } catch (err) {
+        console.warn(`Sala ${datos?.codigo} ilegible, se descarta:`, err.message);
+      }
+    }
+    return recuperadas;
   }
 }

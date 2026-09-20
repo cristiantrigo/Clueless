@@ -275,5 +275,53 @@ export function crearAplicacion() {
   const limpieza = setInterval(() => gestor.limpiar(), 5 * 60 * 1000);
   limpieza.unref?.();
 
+  // ─── Salas guardadas entre reinicios ───────────────────────────────────────
+  //
+  // Un despliegue, un fallo o un reinicio se llevaba por delante todas las
+  // partidas en curso, porque las salas viven en memoria. Aquí se vuelcan a
+  // disco y se recuperan al arrancar.
+  //
+  // Ojo: esto sólo sirve donde el sistema de ficheros sobreviva al reinicio.
+  // En el plan gratuito de Render es efímero y se borra en cada despliegue, así
+  // que allí no protege; sí lo hace en un VPS, en Railway con volumen o en
+  // Render con disco de pago.
+  const RUTA_ESTADO = process.env.RUTA_ESTADO ?? path.join(__dirname, '..', 'data', 'salas.json');
+  const GUARDAR_CADA_MS = Number(process.env.GUARDAR_CADA_MS ?? 10000);
+
+  if (RUTA_ESTADO !== 'no') {
+    const recuperadas = gestor.cargar(RUTA_ESTADO, (sala) => {
+      // Los temporizadores no se guardan: dependen de los sockets. Si a la
+      // ronda le quedaba tiempo se rearma, y si se le pasó mientras el
+      // servidor estaba caído se cierra ya, que es lo que habría ocurrido.
+      if (sala.estado !== 'ronda' || !sala.ronda || sala.ronda.cerrada) return;
+      if (sala.ronda.acaba <= Date.now()) terminarRonda(sala, 'tiempo');
+      else programarRonda(sala);
+    });
+    if (recuperadas) console.log(`Salas recuperadas del reinicio anterior: ${recuperadas}`);
+
+    const guardado = setInterval(() => {
+      try {
+        gestor.volcar(RUTA_ESTADO);
+      } catch (err) {
+        console.warn('No se pudo guardar el estado de las salas:', err.message);
+      }
+    }, GUARDAR_CADA_MS);
+    guardado.unref?.();
+
+    // Un despliegue llega como SIGTERM: guardar aquí es lo que salva la partida
+    // que se está jugando en ese momento.
+    const despedirse = () => {
+      try {
+        const n = gestor.volcar(RUTA_ESTADO);
+        if (n) console.log(`Guardadas ${n} salas antes de cerrar.`);
+      } catch (err) {
+        console.warn('No se pudo guardar al cerrar:', err.message);
+      }
+      process.exit(0);
+    };
+    process.once('SIGTERM', despedirse);
+    process.once('SIGINT', despedirse);
+  }
+
   return { app, servidor, io, gestor };
 }

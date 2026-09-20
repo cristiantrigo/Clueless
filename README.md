@@ -275,6 +275,7 @@ test/
   banco.mjs       banco de sentido común: mide 44 pares que cualquiera relacionaría
   e2e.mjs         partida completa por sockets con anfitrión + 20 jugadores
   sesion.mjs      recarga, reconexión y salida, en un navegador de verdad
+  reinicio.mjs    mata el servidor en mitad de una partida y comprueba que vuelve
 ```
 
 ## Pruebas
@@ -282,6 +283,7 @@ test/
 ```bash
 npm test          # unitarias
 npm run test:e2e  # partida real de 20 jugadores contra el servidor
+npm run test:reinicio  # una partida en curso sobrevive a un SIGTERM
 npm run banco     # calidad de las relaciones: posición media de 44 pares evidentes
 npm run vectores  # regenera data/vectores.bin desde ConceptNet (sólo al ampliar el léxico)
 ```
@@ -298,6 +300,18 @@ distinto tamaño: el puesto 50 entre 23.000 palabras es mucho mejor que entre 2.
 | **hoy** | **0,26 %** | **0** |
 
 ## Detalles de implementación
+
+- **Las salas sobreviven a un reinicio.** El estado se vuelca a disco cada 10 s y al
+  recibir `SIGTERM`, que es lo que llega en un despliegue, y se recupera al arrancar: la
+  ronda sigue donde estaba, con sus intentos, sus puntos y su temporizador rearmado (o
+  cerrada, si el tiempo se pasó mientras el servidor estaba caído). El ranking de la
+  ronda no se guarda —serían megas— y se recalcula en 50 ms desde la palabra secreta.
+  Se desactiva con `RUTA_ESTADO=no`.
+
+  > **En el plan gratuito de Render esto no protege**, porque su sistema de ficheros es
+  > [efímero](https://render.com/docs/free) y se borra en cada despliegue, reinicio o
+  > suspensión, y ese plan [no admite disco persistente](https://render.com/docs/disks).
+  > Sí funciona en un VPS, en Railway con volumen, en Render de pago con disco, y en local.
 
 - **Reconexión**: cada jugador guarda un token en `localStorage`; si se le cae el móvil
   o cierra la pestaña, vuelve a su sitio con sus puntos e intentos intactos.

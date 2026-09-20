@@ -5,3 +5,6 @@ node_modules/
 # Descargas intermedias: se regeneran con scripts/construir-vectores.mjs
 data/numberbatch-es.txt
 data/frecuencia-es.txt
+
+# Estado de las salas, volcado en caliente
+data/salas.json
