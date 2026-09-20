@@ -143,13 +143,25 @@ Las **pistas** salen en este orden: número de letras → campo semántico → l
 
 No hay dependencias de IA ni servicios externos: el motor es propio y determinista.
 
-- `server/lexicon.js` — **2168 palabras** en español agrupadas en ~300 campos
+- `server/lexicon.js` — **2249 palabras** en español agrupadas en ~350 campos
   semánticos. Cada grupo aporta etiquetas (`animal`, `felino`, `postre`, `abstracto`…)
   y una palabra hereda las etiquetas de todos los grupos en los que aparece.
 - `server/similarity.js` — construye un vector disperso por palabra, **pondera cada
   etiqueta con IDF** (las raras pesan mucho más que las genéricas) y mide la cercanía
   con coseno. Con la palabra secreta se ordena todo el léxico y esa posición es lo que
   ve el jugador.
+
+**Una palabra pertenece a su propio campo.** Si una palabra da nombre a un campo
+semántico, el motor se la asigna como etiqueta: el nombre de una categoría es su
+prototipo. Sin esto, `casa` no compartía ni una sola etiqueta con `ventana` —el todo
+desconectado de sus partes, y el género de sus especies— y salía en el puesto #857.
+Ahora está en el #14.
+
+**Los campos genéricos están separados por dominio.** Etiquetas como `parte` o
+`estructura` unían la ventana de una casa con el polen de una flor y la manga de una
+camisa, y los vecinos de `ventana` eran `espina, tallo, polen, semilla`. Cada dominio
+tiene la suya (`partecasa`, `parteplanta`, `parteanimal`…), así que ahora salen
+`persiana, vidriera, puerta, cristal, balcón`.
 
 **El parecido de las letras no acerca por sí solo.** Si dos palabras no comparten nada
 de significado, escribirse parecido no suma: con la secreta `rojo`, `roto` cae al
@@ -189,7 +201,8 @@ public/
   app.js          cliente
   styles.css      estilos, móvil primero
 test/
-  juego.test.js   29 pruebas del motor y de la lógica de sala
+  juego.test.js   31 pruebas del motor y de la lógica de sala
+  banco.mjs       banco de sentido común: mide 44 pares que cualquiera relacionaría
   e2e.mjs         partida completa por sockets con anfitrión + 20 jugadores
   sesion.mjs      recarga, reconexión y salida, en un navegador de verdad
 ```
@@ -199,7 +212,13 @@ test/
 ```bash
 npm test          # unitarias
 npm run test:e2e  # partida real de 20 jugadores contra el servidor
+npm run banco     # calidad de las relaciones: posición media de 44 pares evidentes
 ```
+
+El banco es la red de seguridad del motor: mide dónde cae cada par que cualquiera
+relacionaría (`ventana`/`casa`, `coche`/`rueda`, `miel`/`abeja`…). Antes de la última
+revisión la posición media era **165** y diez pares se iban del top 100; ahora la media
+es **18** y no se sale ninguno.
 
 ## Detalles de implementación
 

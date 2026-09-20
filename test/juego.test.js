@@ -85,8 +85,32 @@ test('lo emparentado de verdad sí queda cerca', () => {
   }
 });
 
+test('el todo está cerca de sus partes, y la categoría de sus miembros', () => {
+  // Una palabra que da nombre a un campo pertenece a ese campo. Sin esto,
+  // «casa» no compartía ni una etiqueta con «ventana» y salía en el puesto 857.
+  const casos = [
+    ['ventana', 'casa'], ['casa', 'ventana'], ['casa', 'cocina'], ['coche', 'rueda'],
+    ['arbol', 'hoja'], ['animal', 'perro'], ['comida', 'pan'], ['color', 'azul'],
+    ['mar', 'barco'], ['ropa', 'zapato'],
+  ];
+  for (const [secreta, pariente] of casos) {
+    const p = rankingDe(secreta).posiciones.get(pariente);
+    assert.ok(p !== undefined, `${pariente} no está en el léxico`);
+    assert.ok(p <= 100, `${pariente} debería estar cerca de ${secreta}, y está en #${p}`);
+  }
+});
+
+test('las partes de una casa no se mezclan con las de una planta', () => {
+  // «parte» y «estructura» eran etiquetas compartidas por dominios ajenos, así
+  // que los vecinos de «ventana» eran polen, tallo y corteza.
+  const p = rankingDe('ventana').posiciones;
+  for (const ajena of ['polen', 'tallo', 'corteza', 'semilla']) {
+    assert.ok(p.get(ajena) > 300, `${ajena} sale demasiado cerca de ventana: #${p.get(ajena)}`);
+  }
+});
+
 test('el léxico no deja de crecer', () => {
-  assert.ok(TOTAL_PALABRAS >= 2100, `sólo ${TOTAL_PALABRAS} palabras`);
+  assert.ok(TOTAL_PALABRAS >= 2200, `sólo ${TOTAL_PALABRAS} palabras`);
 });
 
 test('el calor baja al alejarse la posición', () => {

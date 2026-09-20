@@ -37,7 +37,7 @@ export const GROUPS = [
   ['servivo animal desierto sequia calor', 'camello dromedario escorpion serpiente buitre'],
   ['servivo animal polo frio hielo nieve', 'pinguino foca reno morsa oso alce'],
   ['servivo animal nocturno vuela cueva', 'murcielago buho lechuza polilla luciernaga'],
-  ['animal cuerpo parte', 'cola pata garra pico ala pluma escama pelaje cuerno colmillo hocico bigote'],
+  ['animal cuerpo parteanimal', 'cola pata garra pico ala pluma escama pelaje cuerno colmillo hocico bigote'],
   ['animal granja producto comida', 'huevo leche lana miel cuero queso'],
   ['animal grupo conjunto', 'rebaño manada bandada enjambre jauria banco'],
   ['animal vivienda refugio', 'nido madriguera colmena establo jaula corral cuadra'],
@@ -47,7 +47,7 @@ export const GROUPS = [
   ['servivo planta arbol bosque madera alto', 'roble pino abeto olivo sauce alamo abedul castaño haya chopo'],
   ['servivo planta arbol fruto huerto', 'manzano naranjo limonero cerezo almendro higuera palmera vid'],
   ['servivo planta flor bonito olor jardin', 'flor rosa clavel margarita tulipan girasol orquidea amapola lirio jazmin violeta'],
-  ['planta parte estructura', 'raiz tronco rama hoja semilla brote fruto espina corteza polen tallo capullo'],
+  ['planta parteplanta', 'raiz tronco rama hoja semilla brote fruto espina corteza polen tallo capullo'],
   ['servivo planta hongo bosque comida', 'seta champiñon hongo trufa moho'],
   ['servivo planta desierto espina', 'cactus palmera aloe'],
   ['naturaleza paisaje geografia relieve tierra', 'montaña colina valle llanura meseta acantilado cañon duna cordillera cumbre ladera'],
@@ -62,7 +62,7 @@ export const GROUPS = [
   ['naturaleza astro cielo espacio noche luz', 'sol luna estrella planeta cometa galaxia universo eclipse constelacion meteorito'],
   ['naturaleza elemento basico material', 'agua fuego tierra aire'],
   ['naturaleza material suelo mineral', 'piedra roca arena barro polvo tierra grava arcilla'],
-  ['naturaleza estado agua frio calor', 'hielo vapor nieve escarcha humedad'],
+  ['naturaleza estadoagua frio calor', 'hielo vapor nieve escarcha humedad'],
   ['naturaleza estacion tiempo año ciclo', 'primavera verano otoño invierno'],
   ['naturaleza desastre peligro miedo destruccion', 'terremoto volcan tsunami incendio inundacion avalancha huracan sequia erupcion plaga'],
   ['naturaleza ecologia planeta cuidado', 'medioambiente contaminacion reciclaje basura clima naturaleza bosque energia'],
@@ -95,14 +95,14 @@ export const GROUPS = [
   ['humano cuerpo extremidad brazo', 'brazo mano dedo codo hombro muñeca palma puño uña'],
   ['humano cuerpo extremidad pierna andar', 'pierna pie rodilla tobillo muslo talon planta dedo'],
   ['humano cuerpo interno organo vital', 'corazon pulmon higado estomago cerebro riñon intestino vejiga bazo pancreas'],
-  ['humano cuerpo estructura interna', 'hueso musculo piel sangre nervio vena arteria esqueleto columna craneo costilla tendon'],
+  ['humano cuerpo interna', 'hueso musculo piel sangre nervio vena arteria esqueleto columna craneo costilla tendon'],
   ['humano cuerpo tronco', 'pecho espalda cintura cadera vientre ombligo cuello hombro'],
   ['humano sentido percepcion', 'vista oido olfato gusto tacto mirada sonido olor sabor'],
   ['humano salud enfermedad malestar', 'fiebre gripe tos resfriado dolor herida cicatriz alergia infeccion mareo nausea'],
   ['humano salud grave enfermedad miedo', 'cancer infarto virus epidemia contagio ictus fractura'],
   ['humano salud medicina hospital cuidado', 'medico enfermera hospital medicina pastilla jeringa vacuna operacion farmacia venda receta consulta ambulancia'],
   ['humano cuerpo accion basica vivir', 'dormir comer beber respirar caminar correr saltar reir llorar hablar mirar escuchar'],
-  ['humano cuerpo estado cansancio', 'sueño cansancio fatiga descanso siesta bostezo energia'],
+  ['humano cuerpo cansancio', 'sueño cansancio fatiga descanso siesta bostezo energia'],
   ['humano higiene limpieza cuerpo', 'ducha baño jabon champu toalla cepillo pasta peine colonia desodorante'],
 
   // ─── Personas, familia, sociedad ───────────────────────────────────────────
@@ -143,19 +143,20 @@ export const GROUPS = [
   ['abstracto conocimiento saber', 'saber conocimiento sabiduria ignorancia experiencia talento habilidad genio inteligencia'],
   ['abstracto tiempo medida reloj', 'tiempo hora minuto segundo instante momento rato duracion plazo'],
   ['abstracto tiempo calendario ciclo', 'dia noche semana mes año siglo decada fecha calendario aniversario'],
-  ['abstracto tiempo parte dia luz', 'mañana tarde noche madrugada amanecer atardecer mediodia anochecer alba crepusculo'],
+  ['abstracto tiempo dia luz', 'mañana tarde noche madrugada amanecer atardecer mediodia anochecer alba crepusculo'],
   ['abstracto tiempo pasado futuro', 'pasado presente futuro ayer hoy historia recuerdo antigüedad'],
   ['abstracto cantidad numero matematicas', 'numero cero uno dos tres diez cien mil millon mitad doble tercio par'],
   ['abstracto medida unidad ciencia', 'metro kilo litro grado peso altura distancia tamaño volumen area longitud velocidad'],
   ['abstracto verdad misterio secreto', 'secreto misterio pista enigma verdad mentira sospecha rumor engaño adivinanza'],
   ['abstracto suerte azar juego', 'suerte azar destino casualidad fortuna riesgo apuesta oportunidad'],
-  ['abstracto orden caos estado', 'orden caos desorden lio calma silencio ruido rutina cambio'],
+  ['abstracto orden caos', 'orden caos desorden lio calma silencio ruido rutina cambio'],
   ['abstracto problema solucion', 'problema solucion error fallo acierto intento prueba resultado consecuencia'],
 
   // ─── Casa y objetos ────────────────────────────────────────────────────────
   ['casa habitacion estancia hogar', 'cocina salon dormitorio baño garaje pasillo terraza balcon sotano desvan trastero recibidor'],
   ['casa mueble objeto madera', 'mesa silla sofa cama armario estanteria comoda escritorio taburete banco cuna'],
-  ['casa estructura parte', 'puerta ventana pared techo suelo escalera tejado chimenea columna viga'],
+  ['casa partecasa', 'puerta ventana pared techo suelo escalera tejado chimenea columna viga'],
+  ['casa partecasa abertura luz', 'ventana balcon cristal persiana reja mirilla puerta postigo vidriera'],
   ['casa objeto entrada seguridad', 'llave cerradura timbre buzon felpudo picaporte candado alarma'],
   ['casa textil tela comodidad', 'sabana manta almohada cortina alfombra toalla cojin colcha mantel'],
   ['casa electrodomestico tecnologia util', 'nevera lavadora television microondas aspiradora plancha ventilador estufa lavavajillas secadora'],
@@ -170,7 +171,7 @@ export const GROUPS = [
   ['objeto juguete infancia juego', 'juguete muñeca peluche pelota cometa tobogan columpio patinete triciclo canica'],
 
   // ─── Ropa ──────────────────────────────────────────────────────────────────
-  ['ropa vestir prenda cuerpo', 'camisa camiseta pantalon falda vestido blusa jersey sudadera chaleco mono'],
+  ['ropa vestir prenda', 'camisa camiseta pantalon falda vestido blusa jersey sudadera chaleco mono'],
   ['ropa abrigo frio invierno', 'abrigo chaqueta anorak gabardina bufanda guante gorro jersey'],
   ['ropa pie calzado', 'zapato bota zapatilla sandalia chancla calcetin tacon bota'],
   ['ropa complemento accesorio', 'sombrero gorra cinturon corbata pañuelo bolso gafas guante'],
@@ -185,12 +186,12 @@ export const GROUPS = [
   ['transporte vehiculo ferrocarril publico', 'tren metro tranvia autobus vagon locomotora anden'],
   ['transporte vehiculo aire vuela', 'avion helicoptero globo cohete avioneta parapente dron'],
   ['transporte vehiculo agua nada', 'barco barca velero yate canoa balsa submarino ferri lancha'],
-  ['transporte parte pieza vehiculo', 'rueda motor volante freno asiento espejo faro matricula neumatico embrague'],
+  ['transporte partevehiculo pieza', 'rueda motor volante freno asiento espejo faro matricula neumatico embrague'],
   ['transporte viaje desplazamiento', 'viaje trayecto ruta parada llegada salida billete equipaje pasajero conductor'],
   ['lugar ciudad calle urbano', 'calle plaza avenida acera semaforo cruce esquina rotonda callejon paseo'],
   ['lugar ciudad mobiliario', 'farola banco papelera fuente estatua parque jardin quiosco marquesina'],
   ['lugar edificio publico ciudad', 'escuela hospital museo teatro biblioteca ayuntamiento comisaria estadio piscina polideportivo'],
-  ['lugar edificio vivienda', 'casa piso chalet apartamento edificio bloque cabaña granja mansion choza'],
+  ['casa lugar edificio vivienda', 'casa piso chalet apartamento edificio bloque cabaña granja mansion choza vivienda hogar'],
   ['lugar tienda comercio comprar', 'tienda mercado supermercado panaderia farmacia libreria carniceria pescaderia floristeria quiosco'],
   ['lugar ocio salir comer', 'restaurante bar cafeteria taberna discoteca hotel terraza chiringuito'],
   ['lugar viaje transporte infraestructura', 'aeropuerto estacion puerto carretera autopista tunel puente frontera peaje'],
@@ -200,7 +201,7 @@ export const GROUPS = [
   // ─── Dinero y comercio ─────────────────────────────────────────────────────
   ['abstracto dinero economia valor', 'dinero euro moneda billete banco precio sueldo deuda ahorro impuesto prestamo hipoteca'],
   ['abstracto comercio compra venta', 'compra venta cliente factura descuento oferta rebaja negocio empresa tienda mercado caja'],
-  ['abstracto riqueza pobreza estado', 'rico pobre lujo fortuna herencia tesoro miseria ruina'],
+  ['abstracto riqueza pobreza', 'rico pobre lujo fortuna herencia tesoro miseria ruina'],
   ['abstracto trabajo empleo oficina', 'trabajo empleo oficina contrato horario jefe reunion tarea proyecto ascenso despido vacaciones'],
 
   // ─── Arte y cultura ────────────────────────────────────────────────────────
@@ -211,7 +212,7 @@ export const GROUPS = [
   ['arte literatura libro leer', 'libro novela cuento poema poesia relato pagina capitulo autor lectura biblioteca'],
   ['arte cine pelicula espectaculo', 'cine pelicula documental escena guion camara pantalla actor estreno taquilla'],
   ['arte teatro escenario espectaculo', 'teatro obra escenario telon papel ensayo aplauso publico mascara'],
-  ['arte baile movimiento cuerpo', 'baile danza ballet flamenco vals tango coreografia bailarin'],
+  ['arte baile movimiento', 'baile danza ballet flamenco vals tango coreografia bailarin'],
   ['cultura fiesta celebracion alegria', 'fiesta cumpleaños boda navidad carnaval feria verbena aniversario celebracion brindis'],
   ['cultura fiesta objeto regalo', 'regalo globo tarta vela confeti disfraz mascara adorno guirnalda'],
   ['cultura tradicion antiguo', 'tradicion costumbre leyenda mito cuento folclore refran ritual'],
@@ -252,7 +253,7 @@ export const GROUPS = [
   ['cualidad tamaño medida', 'grande pequeño enorme diminuto alto bajo largo corto ancho estrecho gordo delgado'],
   ['cualidad temperatura sensacion', 'caliente frio templado helado ardiente tibio gelido'],
   ['cualidad velocidad movimiento', 'rapido lento veloz quieto inmovil ligero pesado'],
-  ['cualidad estado conservacion', 'nuevo viejo limpio sucio lleno vacio roto entero antiguo moderno'],
+  ['cualidad conservacion', 'nuevo viejo limpio sucio lleno vacio roto entero antiguo moderno'],
   ['cualidad fuerza resistencia', 'fuerte debil duro blando rigido flexible resistente fragil'],
   ['cualidad luz vision', 'luz sombra oscuridad brillo claro oscuro reflejo destello penumbra'],
   ['cualidad sonido oir', 'ruido silencio eco grito susurro murmullo estruendo melodia zumbido'],
@@ -271,6 +272,48 @@ export const GROUPS = [
   ['comunicacion escrito mensaje', 'carta mensaje nota postal correo firma sobre sello telegrama'],
   ['comunicacion medio noticia', 'periodico noticia revista radio television reportaje entrevista titular prensa'],
   ['comunicacion expresion gesto', 'sonrisa gesto mirada abrazo beso saludo despedida guiño señal'],
+
+  // ─── Campos concentradores ─────────────────────────────────────────────────
+  // Sin ellos, la palabra que da nombre a un campo quedaba en la periferia:
+  // «casa» no tenía casi nada que ver con «cocina» ni «ventana», porque sólo
+  // compartía una etiqueta genérica con ellas.
+  ['casa vivienda hogar domestico', 'casa hogar vivienda piso cocina salon dormitorio baño habitacion puerta ventana pared techo tejado mueble llave'],
+  ['comida alimento comer nutrir', 'comida alimento pan carne fruta verdura pescado arroz pasta huevo leche queso plato hambre cocinar'],
+  ['animal bicho fauna servivo', 'animal bicho fauna perro gato caballo vaca leon pajaro pez insecto mascota salvaje'],
+  ['planta vegetal flora servivo', 'planta vegetal flora arbol flor hierba hoja raiz semilla jardin bosque verde'],
+  ['ropa vestir prenda armario', 'ropa prenda vestir camisa pantalon vestido zapato abrigo falda jersey calcetin armario moda'],
+  ['transporte vehiculo mover viajar', 'transporte vehiculo coche moto bicicleta tren avion barco autobus camion viaje carretera'],
+  ['humano cuerpo persona fisico', 'cuerpo persona cabeza brazo pierna mano pie cara ojo piel hueso musculo sangre'],
+  ['deporte ejercicio competir', 'deporte ejercicio futbol baloncesto tenis natacion correr pelota equipo partido gimnasio entrenar'],
+  ['arte musica sonido oir', 'musica instrumento cancion guitarra piano violin tambor nota melodia concierto ritmo'],
+  ['color visual tono', 'color tono rojo azul verde amarillo negro blanco naranja rosa gris marron pintura'],
+  ['casa mueble objeto madera', 'mueble mesa silla sofa cama armario estanteria escritorio comoda'],
+  ['servivo animal ave pajaro vuela', 'ave pajaro paloma gorrion aguila gallina pato loro pluma nido volar'],
+  ['trabajo oficio profesion ganarse', 'trabajo oficio profesion empleo jefe sueldo oficina obrero cliente empresa'],
+  ['tiempo clima meteorologia', 'clima tiempo lluvia sol nube viento nieve tormenta frio calor temperatura'],
+
+  // ─── Lo que va con lo que ──────────────────────────────────────────────────
+  // Asociaciones de uso, que no comparten campo pero todo el mundo une.
+  ['asociacion dormir descanso noche', 'cama dormir sueño almohada sabana pijama noche descansar siesta manta'],
+  ['asociacion lluvia mojarse protegerse', 'lluvia paraguas charco mojado chubasquero bota nube paraguas gotera'],
+  ['asociacion fuego arder humo', 'fuego humo llama ceniza chispa quemar hoguera incendio leña brasa'],
+  ['asociacion sol luz calor dia', 'sol calor luz rayo sombra bronceado verano gafas playa'],
+  ['asociacion abrir cerrar acceso', 'llave puerta cerradura candado abrir cerrar cerrojo portal'],
+  ['asociacion dinero guardar banco', 'dinero banco cuenta ahorro caja tarjeta cajero moneda billete'],
+  ['asociacion medir hora reloj', 'reloj hora tiempo minuto despertador alarma puntual retraso'],
+  ['asociacion cortar herramienta filo', 'cuchillo cortar tijeras filo hoja sierra navaja afilar'],
+  ['asociacion escribir papel trazo', 'lapiz boligrafo escribir papel letra firma tinta borrar cuaderno'],
+  ['asociacion limpiar suciedad agua', 'jabon limpiar suciedad agua ducha esponja trapo espuma'],
+  ['asociacion enfermedad curar reposo', 'enfermo medico medicina curar fiebre cama reposo receta'],
+  ['asociacion cocinar calor fogon', 'cocinar fuego sarten aceite olla horno receta hervir'],
+  ['asociacion frio abrigarse invierno', 'frio abrigo bufanda guante invierno tiritar calefaccion estufa'],
+  ['asociacion bebe cuidar criar', 'bebe madre padre cuna pañal biberon llorar chupete criar'],
+  ['asociacion mar navegar pescar', 'mar barco pescar red ola puerto marinero ancla vela'],
+
+  ['asociacion playa arena veranear', 'playa arena mar ola costa duna concha sombrilla toalla bañador chiringuito orilla'],
+  ['casa cocina electrodomestico frio', 'nevera cocina congelador horno microondas lavavajillas fregadero encimera despensa'],
+  ['animal granja ordeñar producto', 'vaca leche queso mantequilla yogur nata establo pasto ubre ganadero'],
+  ['planta flor parteplanta petalo', 'flor petalo polen tallo espina capullo ramo perfume'],
 
   // ─── Oficio, tienda y producto ─────────────────────────────────────────────
   // Relaciones reales que antes sólo se sostenían por parecerse las letras.
@@ -313,13 +356,13 @@ export const GROUPS = [
   ['casa dormitorio descanso objeto', 'colchon somier edredon despertador mesilla pijama'],
   ['casa baño objeto', 'bañera lavabo inodoro grifo azulejo toallero secador'],
   ['casa jardin exterior objeto', 'maceta regadera manguera cortacesped hamaca valla porche'],
-  ['casa edificio parte exterior', 'fachada portal ascensor rellano trastero patio'],
+  ['casa edificio partecasa exterior', 'fachada portal ascensor rellano trastero patio'],
   ['casa herramienta arreglo', 'cinta pegamento silicona brocha rodillo nivel metro'],
 
   // ─── Ropa ──────────────────────────────────────────────────────────────────
   ['ropa deporte comodo', 'chandal mallas leggins deportiva muñequera visera'],
   ['ropa formal elegante evento', 'traje pajarita esmoquin blusa tacon americana'],
-  ['ropa parte prenda coser', 'manga cuello bolsillo puño dobladillo forro etiqueta'],
+  ['ropa parteropa prenda coser', 'manga cuello bolsillo puño dobladillo forro etiqueta'],
 
   // ─── Cuerpo y salud ────────────────────────────────────────────────────────
   ['humano cuerpo gesto cara', 'sonrisa mueca guiño lagrima bostezo estornudo hipo suspiro'],
@@ -331,7 +374,7 @@ export const GROUPS = [
   ['abstracto emocion reaccion mente', 'asombro admiracion curiosidad interes aburrimiento indiferencia alivio'],
 
   // ─── Escuela y estudio ─────────────────────────────────────────────────────
-  ['escuela material objeto', 'estuche compas calculadora diccionario libreta agenda subrayador'],
+  ['escuela escolar objeto', 'estuche compas calculadora diccionario libreta agenda subrayador'],
   ['escuela accion aprender', 'estudiar aprobar suspender repasar memorizar copiar corregir'],
 
   // ─── Tecnología ────────────────────────────────────────────────────────────
@@ -379,7 +422,7 @@ export const GROUPS = [
 
   // ─── Acciones y movimiento ─────────────────────────────────────────────────
   ['accion movimiento desplazar', 'andar correr saltar subir bajar entrar salir volver huir perseguir'],
-  ['accion movimiento cuerpo', 'girar empujar tirar levantar caer sentarse tumbarse agacharse estirar'],
+  ['accion movimiento fisico', 'girar empujar tirar levantar caer sentarse tumbarse agacharse estirar'],
   ['accion crear hacer', 'construir crear hacer fabricar dibujar escribir cocinar coser pintar reparar'],
   ['accion destruir romper', 'romper destruir quemar cortar rasgar aplastar derribar borrar'],
   ['accion dar recibir', 'dar recibir prestar regalar vender comprar cambiar compartir robar devolver'],
