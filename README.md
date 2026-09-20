@@ -9,7 +9,7 @@ código de 6 cifras, hasta 20 amigos entran desde el móvil y todos ven en direc
 
 1. Hay una **palabra secreta** en español. Cada jugador escribe la palabra que quiera.
 2. El juego responde con la **posición** de esa palabra en el ranking de cercanía
-   semántica a la secreta: la **#1** es la palabra buscada, la **#1816** es lo más
+   semántica a la secreta: la **#1** es la palabra buscada, la **#23.611** es lo más
    lejano que hay.
 3. `#847` es 🧊 frío · `#180` es 🙂 templado · `#31` es 🌶️ caliente · `#4` es 🔥 ardiendo.
 4. Un **marcador en vivo** ordena a todos los jugadores por su mejor posición: se ve
@@ -136,6 +136,9 @@ El anfitrión puede además dar pistas a mano, terminar la ronda antes de tiempo
 expulsar a alguien y reiniciar el marcador para jugar otra partida. El aforo cuenta sólo
 a los invitados, así que caben 20 amigos **más** el anfitrión.
 
+Los umbrales de 🔥/🌶️/🙂/💨/🧊 se escalan con el tamaño del vocabulario, así que
+significan lo mismo si el léxico crece.
+
 Las **pistas** salen en este orden: número de letras → campo semántico → letra inicial
 → tres palabras muy cercanas → últimas dos letras → la palabra con letras alternas.
 
@@ -144,6 +147,8 @@ Las **pistas** salen en este orden: número de letras → campo semántico → l
 El motor es determinista y no llama a ningún servicio: suma **dos fuentes que se
 compensan**, un léxico escrito a mano y unos vectores semánticos descargados una vez.
 
+- **Vocabulario jugable: 23.611 palabras.** Se puede escribir casi cualquier palabra
+  corriente del español.
 - `server/lexicon.js` — **2249 palabras** en español agrupadas en ~350 campos
   semánticos. Cada grupo aporta etiquetas (`animal`, `felino`, `postre`, `abstracto`…)
   y una palabra hereda las etiquetas de todos los grupos en los que aparece.
@@ -151,8 +156,29 @@ compensan**, un léxico escrito a mano y unos vectores semánticos descargados u
   etiqueta con IDF** (las raras pesan mucho más que las genéricas) y mide la cercanía
   con coseno. Con la palabra secreta se ordena todo el léxico y esa posición es lo que
   ve el jugador.
-- `data/vectores.bin` — vectores de **ConceptNet Numberbatch** recortados al léxico y
-  cuantizados a un byte por dimensión (679 KB). Ver [`data/LEEME-vectores.md`](data/LEEME-vectores.md).
+- `data/vectores.bin` — vectores de **ConceptNet Numberbatch** para todo el vocabulario,
+  cuantizados a un byte por dimensión (7 MB). Ver [`data/LEEME-vectores.md`](data/LEEME-vectores.md).
+
+### El vocabulario grande hay que curarlo, o estropea el juego
+
+Un vocabulario sacado en bruto de una lista de frecuencia es injugable. Con `ventana`
+secreta, los vecinos más cercanos salían así:
+
+```
+ventanas, ventanilla, ventanillas, vidriera, windows, escaparate, escaparates, …
+```
+
+Escribes `ventanas` y estás en el puesto #1 sin haber adivinado nada. De las ~47.000
+candidatas por frecuencia, **un tercio era ruido**: 8.160 flexiones de otra palabra que
+ya estaba, 4.155 conjugaciones y 4.075 extranjerismos. `scripts/construir-vectores.mjs`
+los filtra, y además **fusiona las variantes de género** —`gata` con `gato`— usando el
+propio coseno para decidirlo, porque a ciegas no se puede: las variantes reales rondan
+0,85-0,93 y palabras distintas como `casa`/`caso` o `rata`/`rato` no pasan de 0,2. Así
+se fusionaron 1.547 sin perder ninguna palabra legítima.
+
+La **palabra secreta sale siempre del léxico escrito a mano**, que es el que garantiza
+que sea adivinable y tenga vecindario para dar pistas. El vocabulario grande sólo sirve
+para que el jugador pueda escribir lo que quiera.
 
 ### Por qué dos fuentes y no una
 
@@ -171,10 +197,13 @@ la miel va con la abeja (#76 → #12), el invierno con la nieve (#68 → #16) o 
 dormir (#14 → #3).
 
 Los vectores arrastran un defecto conocido: acercan palabras por escribirse parecido
-(para ellos `rato` está a doce puestos de `gato`). Por eso la mezcla lleva una guarda:
-si dos palabras **no comparten ni una etiqueta** del léxico y además se parecen en las
-letras, su cercanía se recorta al 10 %. Sale gratis —la media no se mueve— y devuelve a
-las impostoras al fondo de la lista.
+(para ellos `rato` está a doce puestos de `gato`). Por eso la mezcla lleva una guarda.
+Una cercanía es real si **el léxico relaciona las dos palabras** o si **el coseno pasa de
+0,35**; si no hay ninguna de las dos pruebas y encima se escriben parecido, se recorta al
+10 %. Ese segundo criterio es lo que deja funcionar la guarda también fuera del léxico:
+los parientes morfológicos de verdad (`ventana`/`ventanilla` 0,88, `vidrio`/`vidriera`
+0,61, `pan`/`panadería` 0,61) se conservan, y las impostoras (`pino`/`pito` 0,10,
+`mar`/`mal` 0,01) se van al fondo.
 
 Si `data/vectores.bin` no está, el juego arranca igual usando sólo el léxico.
 
@@ -228,7 +257,7 @@ public/
   app.js          cliente
   styles.css      estilos, móvil primero
 test/
-  juego.test.js   33 pruebas del motor y de la lógica de sala
+  juego.test.js   34 pruebas del motor y de la lógica de sala
   banco.mjs       banco de sentido común: mide 44 pares que cualquiera relacionaría
   e2e.mjs         partida completa por sockets con anfitrión + 20 jugadores
   sesion.mjs      recarga, reconexión y salida, en un navegador de verdad
@@ -244,9 +273,15 @@ npm run vectores  # regenera data/vectores.bin desde ConceptNet (sólo al amplia
 ```
 
 El banco es la red de seguridad del motor: mide dónde cae cada par que cualquiera
-relacionaría (`ventana`/`casa`, `coche`/`rueda`, `miel`/`abeja`…). Antes de las dos últimas
-revisiones la posición media era **165** y diez pares se iban del top 100; ahora la
-media es **13** y no se sale ninguno.
+relacionaría (`ventana`/`casa`, `coche`/`rueda`, `miel`/`abeja`…). Da el resultado en
+**percentil**, porque la posición bruta no se puede comparar entre vocabularios de
+distinto tamaño: el puesto 50 entre 23.000 palabras es mucho mejor que entre 2.200.
+
+| | percentil medio | pares fuera del 2 % superior |
+| --- | --- | --- |
+| antes de todas las revisiones | 7,3 % | 10 de 44 |
+| sólo el léxico curado | 0,58 % | 0 |
+| **hoy** | **0,21 %** | **0** |
 
 ## Detalles de implementación
 

@@ -32,12 +32,19 @@ posiciones.sort((x, y) => y.p - x.p);
 
 const media = Math.round(posiciones.reduce((s, x) => s + x.p, 0) / posiciones.length);
 const mediana = posiciones[Math.floor(posiciones.length / 2)].p;
-const fuera = posiciones.filter((x) => x.p > 100);
 
-console.log(`Léxico: ${TOTAL_PALABRAS} palabras · pares medidos: ${posiciones.length}`);
+// La posición bruta no se puede comparar entre vocabularios de distinto
+// tamaño: el puesto 50 entre 23 000 palabras es mucho mejor que entre 2 200.
+// El percentil sí es comparable, y es lo que de verdad mide la calidad.
+const percentil = (p) => (p / TOTAL_PALABRAS) * 100;
+const mediaPct = percentil(media);
+const fuera = posiciones.filter((x) => percentil(x.p) > 2);
+
+console.log(`Vocabulario: ${TOTAL_PALABRAS} palabras · pares medidos: ${posiciones.length}`);
 if (faltan.length) console.log('Sin medir (falta la palabra):', faltan.map(([a, b]) => `${a}/${b}`).join(', '));
-console.log(`\nPosición media: ${media} · mediana: ${mediana} · fuera del top 100: ${fuera.length}`);
+console.log(`\nPosición media: ${media} (percentil ${mediaPct.toFixed(2)} %) · mediana: ${mediana}`);
+console.log(`Pares que se van del 2 % superior: ${fuera.length}`);
 console.log('\nLos 12 peores:');
 for (const { a, b, p } of posiciones.slice(0, 12)) {
-  console.log(`  ${(a + ' → ' + b).padEnd(24)} #${p}`);
+  console.log(`  ${(a + ' → ' + b).padEnd(24)} #${String(p).padStart(6)}  (${percentil(p).toFixed(2)} %)`);
 }

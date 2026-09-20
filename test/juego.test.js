@@ -9,10 +9,19 @@ import {
   rankingDe,
   resolver,
   vecinas,
+  existe,
   TOTAL_PALABRAS,
+  PALABRAS_LEXICO,
   RESERVAS,
   CON_VECTORES,
 } from '../server/similarity.js';
+
+/**
+ * Los umbrales estaban afinados para un vocabulario de 2249 palabras. Se
+ * escalan igual que los niveles del juego, con la raíz del crecimiento, para
+ * que sigan significando lo mismo si el vocabulario vuelve a cambiar.
+ */
+const umbral = (n) => Math.round(n * Math.sqrt(TOTAL_PALABRAS / 2249));
 
 // ─── Motor semántico ─────────────────────────────────────────────────────────
 
@@ -55,7 +64,7 @@ test('lo parecido queda cerca y lo ajeno lejos', () => {
       p.get(cerca) < p.get(lejos),
       `${cerca} (#${p.get(cerca)}) debería estar más cerca de ${secreta} que ${lejos} (#${p.get(lejos)})`,
     );
-    assert.ok(p.get(cerca) <= 60, `${cerca} está demasiado lejos de ${secreta}: #${p.get(cerca)}`);
+    assert.ok(p.get(cerca) <= umbral(60), `${cerca} está demasiado lejos de ${secreta}: #${p.get(cerca)}`);
   }
 });
 
@@ -69,7 +78,7 @@ test('parecerse en las letras no acerca si no hay relación de significado', () 
   for (const [secreta, impostora] of casos) {
     const p = rankingDe(secreta).posiciones.get(impostora);
     if (p === undefined) continue; // no está en el léxico
-    assert.ok(p > 400, `${impostora} sale demasiado cerca de ${secreta}: #${p}`);
+    assert.ok(p > umbral(400), `${impostora} sale demasiado cerca de ${secreta}: #${p}`);
   }
 });
 
@@ -82,7 +91,7 @@ test('lo emparentado de verdad sí queda cerca', () => {
   for (const [secreta, pariente] of casos) {
     const p = rankingDe(secreta).posiciones.get(pariente);
     assert.ok(p !== undefined, `${pariente} no está en el léxico`);
-    assert.ok(p <= 60, `${pariente} debería estar cerca de ${secreta}, y está en #${p}`);
+    assert.ok(p <= umbral(60), `${pariente} debería estar cerca de ${secreta}, y está en #${p}`);
   }
 });
 
@@ -97,7 +106,7 @@ test('el todo está cerca de sus partes, y la categoría de sus miembros', () =>
   for (const [secreta, pariente] of casos) {
     const p = rankingDe(secreta).posiciones.get(pariente);
     assert.ok(p !== undefined, `${pariente} no está en el léxico`);
-    assert.ok(p <= 100, `${pariente} debería estar cerca de ${secreta}, y está en #${p}`);
+    assert.ok(p <= umbral(100), `${pariente} debería estar cerca de ${secreta}, y está en #${p}`);
   }
 });
 
@@ -106,7 +115,7 @@ test('las partes de una casa no se mezclan con las de una planta', () => {
   // que los vecinos de «ventana» eran polen, tallo y corteza.
   const p = rankingDe('ventana').posiciones;
   for (const ajena of ['polen', 'tallo', 'corteza', 'semilla']) {
-    assert.ok(p.get(ajena) > 300, `${ajena} sale demasiado cerca de ventana: #${p.get(ajena)}`);
+    assert.ok(p.get(ajena) > umbral(300), `${ajena} sale demasiado cerca de ventana: #${p.get(ajena)}`);
   }
 });
 
@@ -115,12 +124,31 @@ test('los vectores de Numberbatch están y aportan asociación del mundo real', 
   // Relaciones que un léxico escrito a mano no cubre y los vectores sí.
   for (const [secreta, asociada] of [['miel', 'abeja'], ['invierno', 'nieve'], ['cama', 'dormir']]) {
     const p = rankingDe(secreta).posiciones.get(asociada);
-    assert.ok(p <= 40, `${asociada} debería estar cerca de ${secreta}, y está en #${p}`);
+    assert.ok(p <= umbral(40), `${asociada} debería estar cerca de ${secreta}, y está en #${p}`);
   }
 });
 
-test('el léxico no deja de crecer', () => {
-  assert.ok(TOTAL_PALABRAS >= 2200, `sólo ${TOTAL_PALABRAS} palabras`);
+test('el vocabulario jugable es grande y el léxico sigue siendo su columna', () => {
+  // El jugador puede escribir cualquier palabra corriente del español…
+  assert.ok(TOTAL_PALABRAS >= 20000, `sólo ${TOTAL_PALABRAS} palabras jugables`);
+  // …pero las relaciones de taxonomía salen del léxico escrito a mano.
+  assert.ok(PALABRAS_LEXICO.length >= 2200, `sólo ${PALABRAS_LEXICO.length} en el léxico`);
+  // Y la palabra secreta sale siempre de ahí, que es la que está garantizada
+  // como adivinable: nadie debería tener que sacar «dermatólogo».
+  const delLexico = new Set(PALABRAS_LEXICO);
+  for (const nivel of ['facil', 'normal', 'dificil']) {
+    assert.ok(RESERVAS[nivel].every((p) => delLexico.has(p)), `${nivel} tiene secretas fuera del léxico`);
+  }
+});
+
+test('el vocabulario grande no trae flexiones que compitan con su palabra', () => {
+  // Con «ventana» secreta, «ventanas» en el puesto 1 arruinaría la ronda.
+  for (const flexion of ['ventanas', 'casas', 'perros', 'gata', 'corriendo', 'comiendo']) {
+    assert.ok(!existe(flexion), `${flexion} no debería estar en el vocabulario`);
+  }
+  // Pero sí se resuelven a su lema al escribirlas.
+  assert.equal(resolver('ventanas'), 'ventana');
+  assert.equal(resolver('gatas'), 'gato');
 });
 
 test('el calor baja al alejarse la posición', () => {
