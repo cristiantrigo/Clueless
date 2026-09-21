@@ -104,6 +104,41 @@ proceso Node persistente con WebSockets:
 > adaptador de Socket.IO. Con un proceso persistente (Render, Railway, Fly.io) no pasa
 > nada de esto.
 
+### Que no se duerma
+
+El plan gratuito de Render **apaga el servicio tras 15 minutos sin recibir ninguna
+petición**, y volver a encenderlo tarda entre 30 y 60 segundos: quien abra la URL en ese
+rato se encuentra la pantalla de carga de Render y se cree que el juego está roto. Como
+el juego se convoca por sorpresa —y no siempre lo convoca quien lo mantiene—, no vale
+con "entra tú primero a despertarlo". Hay dos capas para que nunca haga falta:
+
+1. **Auto-ping del propio proceso** (`server/despierto.js`). Mientras está vivo, se llama
+   a sí mismo por su URL pública cada 10 minutos. La petición sale a internet y vuelve a
+   entrar por el balanceador, así que cuenta como tráfico y la cuenta atrás no llega
+   nunca a los 15. Se activa solo cuando existe `RENDER_EXTERNAL_URL` (Render la publica)
+   o `URL_PUBLICA`; en local no hace nada.
+2. **Cron externo** (`.github/workflows/despertador.yml`). Llama a `/api/salud` cada 5
+   minutos desde GitHub Actions. Esta es la capa que importa, porque es la única que
+   puede despertarlo **cuando ya está apagado** (tras un despliegue o una caída), cosa
+   que el auto-ping no puede hacer por sí mismo. El repositorio es público, así que esos
+   minutos de Actions no se cobran.
+
+| Variable | Por defecto | Para qué |
+| --- | --- | --- |
+| `URL_PUBLICA` | `RENDER_EXTERNAL_URL` | URL por la que se llega al servicio. |
+| `PING_CADA_MS` | `600000` (10 min) | Cada cuánto se llama a sí mismo. |
+
+Y la URL del cron se cambia sin tocar el código, en *Settings → Secrets and variables →
+Actions → Variables*, con la variable `URL_JUEGO`.
+
+> **Dos avisos.**
+> El plan gratuito de Render da **750 horas de instancia al mes** y un mes tiene unas
+> 730, así que un servicio despierto a todas horas cabe, pero **sólo si es el único
+> servicio gratuito de la cuenta**; con dos se pasa del cupo. Si hiciera falta recortar,
+> basta con limitar el `cron` a la franja en la que se juega (p. ej. `*/5 8-23 * * *`).
+> Y GitHub **desactiva los crons de un repositorio que pasa 60 días sin commits**: si el
+> juego se queda parado meses, hay que reactivarlo desde la pestaña *Actions*.
+
 ## Pensado para el móvil
 
 Los jugadores juegan desde el teléfono, así que la interfaz se diseñó primero para esa

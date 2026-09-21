@@ -1,0 +1,74 @@
+# Despertador del juego.
+#
+# El plan gratuito de Render apaga el servicio tras 15 minutos sin peticiones, y
+# volver a encenderlo tarda casi un minuto. Este cron le da un toque cada pocos
+# minutos para que la cuenta atrás no llegue nunca a los 15, y así quien entre
+# —con o sin el anfitrión delante— se encuentre el juego ya cargado.
+#
+# El repositorio es público, así que estos minutos de Actions no se cobran.
+#
+# OJO: GitHub desactiva los crons de un repositorio que pasa 60 días sin
+# commits. Si el juego se queda parado meses, hay que volver a activarlo a mano
+# desde la pestaña Actions (o lanzarlo con "Run workflow", que también lo
+# reactiva).
+
+name: Despertador
+
+on:
+  schedule:
+    # Cada 5 minutos. GitHub no garantiza la puntualidad de los crons y puede
+    # retrasarlos bastante cuando hay cola, por eso se pide más a menudo de lo
+    # que haría falta y cada ejecución llama dos veces.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+# Sólo hace una llamada HTTP a un servicio externo: no necesita tocar el repo.
+permissions: {}
+
+concurrency:
+  group: despertador
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Llamar al servicio
+        env:
+          # Configurable desde Settings → Secrets and variables → Actions →
+          # Variables, por si algún día cambia el alojamiento.
+          URL: ${{ vars.URL_JUEGO || 'https://clueless-party.onrender.com' }}
+        run: |
+          set -u
+
+          llamar() {
+            # --max-time 90 porque si el servicio estaba dormido, esta misma
+            # llamada es la que lo levanta y tarda lo que tarde el contenedor.
+            codigo=$(curl -sS -o /tmp/salud.json -w '%{http_code}' \
+                       --max-time 90 --retry 2 --retry-delay 10 \
+                       -A 'clueless-despertador' \
+                       "$URL/api/salud" || true)
+            # curl ya escribe 000 al no conectar; sin esto se duplicaría.
+            [ -z "$codigo" ] && codigo=000
+            echo "$(date -u '+%H:%M:%S') → HTTP $codigo"
+            if [ "$codigo" = "200" ]; then
+              cat /tmp/salud.json
+              echo
+              return 0
+            fi
+            return 1
+          }
+
+          ok=0
+          llamar && ok=1
+
+          # Segunda llamada a mitad de la ventana: si el cron de después se
+          # retrasa, este toque extra evita pasar de los 15 minutos.
+          sleep 150
+          llamar && ok=1
+
+          if [ "$ok" = "0" ]; then
+            echo "::error::El servicio no respondió en ninguno de los dos intentos."
+            exit 1
+          fi
