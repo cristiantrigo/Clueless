@@ -113,20 +113,26 @@ el juego se convoca por sorpresa —y no siempre lo convoca quien lo mantiene—
 con "entra tú primero a despertarlo". Hay dos capas para que nunca haga falta:
 
 1. **Auto-ping del propio proceso** (`server/despierto.js`). Mientras está vivo, se llama
-   a sí mismo por su URL pública cada 10 minutos. La petición sale a internet y vuelve a
+   a sí mismo por su URL pública cada 5 minutos. La petición sale a internet y vuelve a
    entrar por el balanceador, así que cuenta como tráfico y la cuenta atrás no llega
    nunca a los 15. Se activa solo cuando existe `RENDER_EXTERNAL_URL` (Render la publica)
    o `URL_PUBLICA`; en local no hace nada.
 2. **Cron externo** (`.github/workflows/despertador.yml`). Llama a `/api/salud` cada 5
-   minutos desde GitHub Actions. Esta es la capa que importa, porque es la única que
-   puede despertarlo **cuando ya está apagado** (tras un despliegue o una caída), cosa
-   que el auto-ping no puede hacer por sí mismo. El repositorio es público, así que esos
-   minutos de Actions no se cobran.
+   minutos desde GitHub Actions. Es la única capa que puede despertarlo **cuando ya está
+   apagado** (tras un despliegue o una caída), cosa que el auto-ping no puede hacer por
+   sí mismo, porque un proceso dormido no se llama. El repositorio es público, así que
+   esos minutos de Actions no se cobran.
+
+   > Los `cron` de Actions son *best effort*: GitHub los retrasa cuando hay cola y un
+   > horario recién creado puede tardar en darse de alta. Por eso el peso lo lleva el
+   > auto-ping, que es un temporizador nuestro y sí es puntual; el cron es la red de
+   > seguridad para el rato en que el proceso no está vivo para pingarse. Se puede
+   > lanzar a mano desde la pestaña *Actions* → *Despertador* → *Run workflow*.
 
 | Variable | Por defecto | Para qué |
 | --- | --- | --- |
 | `URL_PUBLICA` | `RENDER_EXTERNAL_URL` | URL por la que se llega al servicio. |
-| `PING_CADA_MS` | `600000` (10 min) | Cada cuánto se llama a sí mismo. |
+| `PING_CADA_MS` | `300000` (5 min) | Cada cuánto se llama a sí mismo. |
 
 Y la URL del cron se cambia sin tocar el código, en *Settings → Secrets and variables →
 Actions → Variables*, con la variable `URL_JUEGO`.

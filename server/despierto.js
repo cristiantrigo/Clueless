@@ -17,8 +17,12 @@
  * .github/workflows/despertador.yml, que es externo.
  */
 
-/** Cada cuánto llamarse. Por debajo del apagado de 15 minutos, con margen. */
-const CADA_MS = Number(process.env.PING_CADA_MS ?? 10 * 60 * 1000);
+/**
+ * Cada cuánto llamarse. A 5 minutos harían falta tres fallos seguidos para
+ * pasarse de los 15 y que el alojamiento lo apague; a 10 bastaban dos. Una
+ * petición cada cinco minutos no cuesta nada, así que el margen sale gratis.
+ */
+const CADA_MS = Number(process.env.PING_CADA_MS ?? 5 * 60 * 1000);
 
 /** Si el servicio no contesta en este tiempo, se abandona y se reintenta luego. */
 const ESPERA_MAXIMA_MS = 20000;
@@ -56,7 +60,10 @@ export function mantenerDespierto({
   }
 
   const destino = `${url}/api/salud`;
-  const cuenta = { intentos: 0, correctos: 0, fallidos: 0, ultimoError: null };
+  const cuenta = { intentos: 0, correctos: 0, fallidos: 0, seguidos: 0, ultimoError: null };
+
+  /** Fallos seguidos a partir de los cuales ya peligra la ventana de 15 min. */
+  const FALLOS_PARA_AVISAR = 2;
 
   async function llamar() {
     cuenta.intentos += 1;
@@ -69,16 +76,26 @@ export function mantenerDespierto({
       });
       if (respuesta.ok) {
         cuenta.correctos += 1;
+        cuenta.seguidos = 0;
       } else {
-        cuenta.fallidos += 1;
-        cuenta.ultimoError = `HTTP ${respuesta.status}`;
+        anotarFallo(`HTTP ${respuesta.status}`);
       }
     } catch (err) {
       // Un ping fallido no es grave: el siguiente llega en unos minutos y el
       // cron externo sigue cubriendo por su lado. No queremos tirar el proceso
       // por esto, así que sólo se anota.
-      cuenta.fallidos += 1;
-      cuenta.ultimoError = err.message;
+      anotarFallo(err.message);
+    }
+  }
+
+  function anotarFallo(motivo) {
+    cuenta.fallidos += 1;
+    cuenta.seguidos += 1;
+    cuenta.ultimoError = motivo;
+    // Un fallo suelto no dice nada; varios seguidos sí, porque significan que
+    // el servicio va camino de dormirse y conviene verlo en los registros.
+    if (cuenta.seguidos >= FALLOS_PARA_AVISAR) {
+      log.warn?.(`Auto-ping fallido ${cuenta.seguidos} veces seguidas (${motivo}).`);
     }
   }
 

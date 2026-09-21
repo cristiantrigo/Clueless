@@ -100,6 +100,44 @@ describe('mantenerDespierto', () => {
     assert.equal(mando.cuenta.correctos, 0);
   });
 
+  it('avisa en los registros cuando encadena fallos', async () => {
+    const avisos = [];
+    const mando = arrancar({
+      url: 'https://ejemplo.com',
+      cadaMs: 5,
+      buscar: async () => { throw new Error('sin red'); },
+      log: { warn: (t) => avisos.push(t) },
+    });
+
+    await esperar(40);
+    mando.parar();
+
+    assert.ok(mando.cuenta.seguidos >= 2, 'debería llevar la cuenta de fallos seguidos');
+    assert.ok(avisos.length >= 1, 'debería haber avisado');
+    assert.match(avisos[0], /Auto-ping fallido \d+ veces seguidas \(sin red\)/);
+  });
+
+  it('no avisa por un fallo suelto y reinicia la cuenta al recuperarse', async () => {
+    const avisos = [];
+    let llamadas = 0;
+    const mando = arrancar({
+      url: 'https://ejemplo.com',
+      cadaMs: 5,
+      buscar: async () => {
+        llamadas += 1;
+        if (llamadas === 1) throw new Error('fallo suelto');
+        return { ok: true, status: 200 };
+      },
+      log: { warn: (t) => avisos.push(t) },
+    });
+
+    await esperar(40);
+    mando.parar();
+
+    assert.equal(avisos.length, 0, 'un fallo aislado no merece aviso');
+    assert.equal(mando.cuenta.seguidos, 0, 'la racha se reinicia al volver a responder');
+  });
+
   it('deja de llamar cuando se para', async () => {
     let llamadas = 0;
     const mando = arrancar({
