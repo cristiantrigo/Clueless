@@ -37,6 +37,19 @@ export function urlPublica(entorno = process.env) {
 }
 
 /**
+ * Último despertador arrancado, para poder asomarlo en /api/salud. Es la forma
+ * de saber desde fuera si el auto-ping está vivo y si sus llamadas funcionan,
+ * sin tener que rebuscar en los registros del alojamiento.
+ */
+let ultimoMando = null;
+
+/** Resumen del auto-ping para /api/salud. `null` si no está activo. */
+export function estadoDespertador() {
+  if (!ultimoMando) return null;
+  return { destino: ultimoMando.url, ...ultimoMando.cuenta };
+}
+
+/**
  * Arranca el ping periódico. Devuelve un mando con `parar()` y un contador de
  * lo que ha ido pasando, que es lo que mira la prueba.
  *
@@ -103,11 +116,14 @@ export function mantenerDespierto({
   // Sin unref el proceso no terminaría nunca al cerrarlo desde una prueba.
   temporizador.unref?.();
 
-  return {
+  const mando = {
     url: destino,
     cuenta,
     parar() {
       clearInterval(temporizador);
+      if (ultimoMando === mando) ultimoMando = null;
     },
   };
+  ultimoMando = mando;
+  return mando;
 }

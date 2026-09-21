@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { after, describe, it } from 'node:test';
 import { setTimeout as esperar } from 'node:timers/promises';
 
-import { mantenerDespierto, urlPublica } from '../server/despierto.js';
+import { estadoDespertador, mantenerDespierto, urlPublica } from '../server/despierto.js';
 
 describe('urlPublica', () => {
   it('usa URL_PUBLICA cuando está puesta', () => {
@@ -136,6 +136,25 @@ describe('mantenerDespierto', () => {
 
     assert.equal(avisos.length, 0, 'un fallo aislado no merece aviso');
     assert.equal(mando.cuenta.seguidos, 0, 'la racha se reinicia al volver a responder');
+  });
+
+  it('asoma su estado para /api/salud, y lo retira al pararse', async () => {
+    assert.equal(estadoDespertador(), null, 'sin arrancar no debe informar de nada');
+
+    const mando = arrancar({
+      url: 'https://ejemplo.com',
+      cadaMs: 5,
+      buscar: async () => ({ ok: true, status: 200 }),
+    });
+
+    await esperar(20);
+    const estado = estadoDespertador();
+    assert.equal(estado.destino, 'https://ejemplo.com/api/salud');
+    assert.ok(estado.correctos >= 1, 'debe contar las llamadas que salieron bien');
+    assert.equal(estado.fallidos, 0);
+
+    mando.parar();
+    assert.equal(estadoDespertador(), null, 'al pararse deja de informar');
   });
 
   it('deja de llamar cuando se para', async () => {

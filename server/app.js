@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { Server } from 'socket.io';
 
+import { estadoDespertador } from './despierto.js';
 import { GestorSalas, LIMITES } from './game.js';
 import { TOTAL_PALABRAS } from './similarity.js';
 
@@ -40,6 +41,9 @@ export function crearAplicacion() {
       salas: gestor.salas.size,
       palabras: TOTAL_PALABRAS,
       limites: LIMITES,
+      // Si sale null, el auto-ping no está funcionando y el servicio acabará
+      // durmiéndose: mirar esto es la forma rápida de comprobarlo desde fuera.
+      despertador: estadoDespertador(),
     });
   });
 

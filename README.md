@@ -129,6 +129,10 @@ con "entra tú primero a despertarlo". Hay dos capas para que nunca haga falta:
    > seguridad para el rato en que el proceso no está vivo para pingarse. Se puede
    > lanzar a mano desde la pestaña *Actions* → *Despertador* → *Run workflow*.
 
+Para saber desde fuera si el auto-ping está funcionando, basta con abrir
+`/api/salud`: el campo `despertador` trae el destino y la cuenta de llamadas. Si sale
+`null`, el auto-ping **no** está activo y el servicio acabará durmiéndose.
+
 | Variable | Por defecto | Para qué |
 | --- | --- | --- |
 | `URL_PUBLICA` | `RENDER_EXTERNAL_URL` | URL por la que se llega al servicio. |
